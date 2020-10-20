@@ -257,7 +257,7 @@
 #define APP_ENABLE_LEDLINK     false             // [SetOption31] Enable link led blinking
 
 #define APP_PULSETIME          0                 // [PulseTime] Time in 0.1 Sec to turn off power for relay 1 (0 = disabled)
-#define APP_POWERON_STATE      POWER_ALL_SAVED   // [PowerOnState] Power On Relay state
+#define APP_POWERON_STATE      POWER_ALL_ON      // [PowerOnState] Power On Relay state
                                                  //   (POWER_ALL_OFF, POWER_ALL_ON, POWER_ALL_SAVED_TOGGLE, POWER_ALL_SAVED, POWER_ALL_ALWAYS_ON, POWER_ALL_OFF_PULSETIME_ON)
 #define APP_BLINKTIME          10                // [BlinkTime] Time in 0.1 Sec to blink/toggle power for relay 1
 #define APP_BLINKCOUNT         10                // [BlinkCount] Number of blinks (0 = 32000)
@@ -310,7 +310,7 @@
 #define LIGHT_VIRTUAL_CT_CW    false             // [SetOption107] Virtual CT Channel - signals whether the hardware white is cold CW (true) or warm WW (false)
 
 // -- Energy --------------------------------------
-#define ENERGY_VOLTAGE_ALWAYS  false             // [SetOption21] Enable show voltage even if powered off
+#define ENERGY_VOLTAGE_ALWAYS  true             // [SetOption21] Enable show voltage even if powered off
 #define ENERGY_DDS2382_MODE    false             // [SetOption71] Enable DDS2382 different Modbus registers for Active Energy (#6531)
 #define ENERGY_HARDWARE_TOTALS false             // [SetOption72] Enable hardware energy total counter as reference (#6561)
 
