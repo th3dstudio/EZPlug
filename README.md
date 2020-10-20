@@ -6,7 +6,7 @@
 - Presetup for our EZPlug products
 - Home Assistant discovery enabled by default
 - Works with OctoPrint-Tasmota plugin for Octoprint
-- EZPlug+ - Power monitoring pre-calibrated for US voltage
+- EZPlug+ has Power monitoring pre-calibrated for US voltage
 - Supports upgrading to standard Tasmota for those that want it
 
 ## Updating your EZPlug Firmware
@@ -23,8 +23,8 @@ Our plug is compatible with regular Tasmota when setup with the correct template
 **Tasmota Templates:**
 
 
-- **EZPlug: `{"NAME":"TH3D EZPlug","GPIO":[0,0,0,17,0,0,0,0,0,56,21,0,0],"FLAG":0,"BASE":1}`**
-- **EZPlug+: `Coming Soon`**
+- **EZPlug:** `{"NAME":"EZPlug V1","GPIO":[0,0,0,17,0,0,0,0,0,56,21,0,0],"FLAG":0,"BASE":1}`
+- **EZPlug+:** `{"NAME":"EZPlug V1","GPIO":[0,0,0,17,134,132,0,0,131,56,21,0,0],"FLAG":0,"BASE":1}`
 
 **Converting the EZPlug from our Firmware to Tasmota:**
 
