@@ -53,7 +53,8 @@
 #define PROJECT                "EZPlug"          // PROJECT is used as the default topic delimiter
 
 // If not selected the default will be SONOFF_BASIC
-#define MODULE                 EZPLUG_V1         // [Module] Select default module from tasmota_template.h
+//#define MODULE                 EZPLUG_V1         // EZPlug
+#define MODULE                 EZPLUG_PLUS_V1    // EZPlug Plus
 #ifdef ESP8266
 #define FALLBACK_MODULE        SONOFF_BASIC      // [Module2] Select default module on fast reboot where USER_MODULE is user template
 //#define USER_TEMPLATE "{\"NAME\":\"Generic\",\"GPIO\":[255,255,255,255,255,255,255,255,255,255,255,255,255],\"FLAG\":15,\"BASE\":18}"  // [Template] Set JSON template

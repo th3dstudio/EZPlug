@@ -1032,7 +1032,7 @@ typedef struct MYTMPLT8266 {
 // Supported hardware modules
 
 enum SupportedModules {
-  EZPLUG_V1, SONOFF_BASIC, SONOFF_RF, SONOFF_SV, SONOFF_TH, SONOFF_DUAL, SONOFF_POW, SONOFF_4CH, SONOFF_S2X, SLAMPHER, SONOFF_TOUCH,
+  EZPLUG_V1, EZPLUG_PLUS_V1, SONOFF_BASIC, SONOFF_RF, SONOFF_SV, SONOFF_TH, SONOFF_DUAL, SONOFF_POW, SONOFF_4CH, SONOFF_S2X, SLAMPHER, SONOFF_TOUCH,
   SONOFF_LED, CH1, CH4, MOTOR, ELECTRODRAGON, EXS_RELAY, WION, WEMOS, SONOFF_DEV, H801,
   SONOFF_SC, SONOFF_BN, SONOFF_4CHPRO, HUAFAN_SS, SONOFF_BRIDGE, SONOFF_B1, AILIGHT, SONOFF_T11, SONOFF_T12, SONOFF_T13,
   SUPLA1, WITTY, YUNSHAN, MAGICHOME, LUANIHVIO, KMC_70011, ARILUX_LC01, ARILUX_LC11, SONOFF_DUAL_R2, ARILUX_LC06,
@@ -1045,7 +1045,7 @@ enum SupportedModules {
 #define USER_MODULE        255
 
 const char kModuleNames[] PROGMEM =
-  "EZPlug V1|Sonoff Basic|Sonoff RF|Sonoff SV|Sonoff TH|Sonoff Dual|Sonoff Pow|Sonoff 4CH|Sonoff S2X|Slampher|Sonoff Touch|"
+  "EZPlug V1|EZPlug+ V1|Sonoff Basic|Sonoff RF|Sonoff SV|Sonoff TH|Sonoff Dual|Sonoff Pow|Sonoff 4CH|Sonoff S2X|Slampher|Sonoff Touch|"
   "Sonoff LED|1 Channel|4 Channel|Motor C/AC|ElectroDragon|EXS Relay(s)|WiOn|Generic|Sonoff Dev|H801|"
   "Sonoff SC|Sonoff BN-SZ|Sonoff 4CH Pro|Huafan SS|Sonoff Bridge|Sonoff B1|AiLight|Sonoff T1 1CH|Sonoff T1 2CH|Sonoff T1 3CH|"
   "Supla Espablo|Witty Cloud|Yunshan Relay|MagicHome|Luani HVIO|KMC 70011|Arilux LC01|Arilux LC11|Sonoff Dual R2|Arilux LC06|"
@@ -1057,6 +1057,7 @@ const char kModuleNames[] PROGMEM =
 
 const uint8_t kModuleNiceList[] PROGMEM = {
   EZPLUG_V1,
+  EZPLUG_PLUS_V1,
   SONOFF_BASIC,        // Sonoff Relay Devices
   SONOFF_RF,
   SONOFF_TH,
@@ -1159,7 +1160,7 @@ const uint8_t kModuleNiceList[] PROGMEM = {
 };
 
 enum SupportedTemplates8285 {
-  TMP_EZPLUG_V1, TMP_SONOFF_BASIC, TMP_SONOFF_SV, TMP_SONOFF_DUAL, TMP_SONOFF_POW, TMP_SONOFF_LED, TMP_ELECTRODRAGON,
+  TMP_EZPLUG_V1, TMP_EZPLUG_PLUS_V1, TMP_SONOFF_BASIC, TMP_SONOFF_SV, TMP_SONOFF_DUAL, TMP_SONOFF_POW, TMP_SONOFF_LED, TMP_ELECTRODRAGON,
   TMP_EXS_RELAY, TMP_WION, TMP_SONOFF_DEV, TMP_H801, TMP_SONOFF_SC, TMP_SONOFF_BN, TMP_HUAFAN_SS, TMP_SONOFF_BRIDGE,
   TMP_SONOFF_B1, TMP_AILIGHT, TMP_SONOFF_T11, TMP_SUPLA1, TMP_WITTY, TMP_YUNSHAN, TMP_MAGICHOME,
   TMP_LUANIHVIO, TMP_KMC_70011, TMP_ARILUX_LC01, TMP_ARILUX_LC11, TMP_ARILUX_LC06, TMP_ZENGGE_ZF_WF017,
@@ -1175,6 +1176,7 @@ enum SupportedTemplates8266 {
 
 const uint8_t kModuleTemplateList[MAXMODULE] PROGMEM = {
   TMP_EZPLUG_V1,
+  TMP_EZPLUG_PLUS_V1,
   TMP_SONOFF_BASIC,
   TMP_SONOFF_BASIC,     // SONOFF_RF
   TMP_SONOFF_SV,
@@ -1271,6 +1273,26 @@ const mytmplt8266 kModules8266[TMP_MAXMODULE_8285] PROGMEM = {
                         // GPIO10 (SD_DATA3 Flash QIO or ESP8285)
                         // GPIO11 (SD_CMD   Flash)
     0,                  // GPIO12 Red Led and Relay (0 = Off, 1 = On)
+    GPIO_LED1_INV,      // GPIO13 Blue Led (0 = On, 1 = Off) - Link and Power status
+    GPIO_REL1,          // GPIO14 Relay
+    0,                  // GPIO15
+    0,                  // GPIO16
+    0                   // ADC0 Analog input
+  },
+  {                     // TH3D EZPlug+ V1 (ESP8266)
+    0,                  // GPIO00 Button
+    0,                  // GPIO01 Serial RXD and Optional sensor
+    0,                  // GPIO02 Only available on newer Sonoff Basic R2 V1
+    GPIO_KEY1,          // GPIO03 Serial TXD and Optional sensor
+    GPIO_HJL_CF,        // GPIO04 BL0937 CF Power
+    GPIO_NRG_CF1,       // GPIO05 HLW8012/HLJ-01 CF1 voltage / current
+                        // GPIO06 (SD_CLK   Flash)
+                        // GPIO07 (SD_DATA0 Flash QIO/DIO/DOUT)
+                        // GPIO08 (SD_DATA1 Flash QIO/DIO/DOUT)
+                        // GPIO09 (SD_DATA2 Flash QIO or ESP8285)
+                        // GPIO10 (SD_DATA3 Flash QIO or ESP8285)
+                        // GPIO11 (SD_CMD   Flash)
+    GPIO_NRG_SEL_INV,   // GPIO12 HLW8012/HLJ-01 Sel output (0 = Voltage)
     GPIO_LED1_INV,      // GPIO13 Blue Led (0 = On, 1 = Off) - Link and Power status
     GPIO_REL1,          // GPIO14 Relay
     0,                  // GPIO15
