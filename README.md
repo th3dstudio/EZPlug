@@ -22,6 +22,12 @@ Our plug is compatible with regular Tasmota when setup with the correct template
 
 **Tasmota Templates:**
 
+Tasmota 9.1 and Later:
+
+- **EZPlug:** `{"NAME":"EZPlug V1","GPIO":[0,0,0,32,0,0,0,0,0,320,224,0,0,0],"FLAG":0,"BASE":1}`
+- **EZPlug+:** `{"NAME":"EZPlug+ V1","GPIO":[0,0,0,32,2720,2656,0,0,2624,320,224,0,0,0],"FLAG":0,"BASE":1}`
+
+Tasmota 9.0 and Older:
 
 - **EZPlug:** `{"NAME":"EZPlug V1","GPIO":[0,0,0,17,0,0,0,0,0,56,21,0,0],"FLAG":0,"BASE":1}`
 - **EZPlug+:** `{"NAME":"EZPlug+ V1","GPIO":[0,0,0,17,134,132,0,0,131,56,21,0,0],"FLAG":0,"BASE":1}`
