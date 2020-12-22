@@ -16,7 +16,7 @@
 3. Flash the normal BIN file from the GUI
 4. Enjoy the updated firmware
 
-## Using the EZPlug to "Vanilla" Tasmota
+## Using the EZPlug with "Vanilla" Tasmota
 
 Our plug is compatible with regular Tasmota when setup with the correct template.
 
