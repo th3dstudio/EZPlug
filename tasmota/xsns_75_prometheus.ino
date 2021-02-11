@@ -24,11 +24,66 @@
 
 #define XSNS_75                    75
 
+const char *UnitfromType(const char *type)  // find unit for measurment type
+{
+  if (strcmp(type, "time") == 0)
+  {
+    return "_seconds";
+  }
+  if (strcmp(type, "temperature") == 0 || strcmp(type, "dewpoint") == 0)
+  {
+    return "_celsius";
+  }
+  if (strcmp(type, "pressure") == 0)
+  {
+    return "_hpa";
+  }
+  if (strcmp(type, "voltage") == 0)
+  {
+    return "_volts";
+  }
+  if (strcmp(type, "current") == 0)
+  {
+    return "_amperes";
+  }
+  if (strcmp(type, "mass") == 0)
+  {
+    return "_grams";
+  }
+  if (strcmp(type, "carbondioxide") == 0)
+  {
+    return "_ppm";
+  }
+  if (strcmp(type, "humidity") == 0)
+  {
+    return "_percentage";
+  }
+  return "";
+}
+
+const char *FormatMetricName(const char *metric)  // cleanup spaces and uppercases for Prmetheus metrics conventions
+{
+  char *formated = (char *)malloc(strlen(metric)+1);
+  uint32_t cnt = 0;
+  for (cnt; cnt < strlen(metric)+1; cnt++)
+  {
+    if (metric[cnt] == ' ')
+    { 
+      formated[cnt] = '_';
+    }
+    else
+    {
+      formated[cnt] = tolower(metric[cnt]);
+    }
+  }
+  return formated;
+}
+
 void HandleMetrics(void)
 {
   if (!HttpCheckPriviledgedAccess()) { return; }
 
-  AddLog_P(LOG_LEVEL_DEBUG, S_LOG_HTTP, PSTR("Prometheus"));
+  AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP "Prometheus"));
 
   WSContentBegin(200, CT_PLAIN);
 
@@ -37,8 +92,8 @@ void HandleMetrics(void)
 
   // Pseudo-metric providing metadata about the running firmware version.
   WSContentSend_P(PSTR("# TYPE tasmota_info gauge\ntasmota_info{version=\"%s\",image=\"%s\",build_timestamp=\"%s\"} 1\n"),
-                  my_version, my_image, GetBuildDateAndTime().c_str());
-  WSContentSend_P(PSTR("# TYPE tasmota_uptime_seconds gauge\ntasmota_uptime_seconds %d\n"), uptime);
+                  TasmotaGlobal.version, TasmotaGlobal.image_name, GetBuildDateAndTime().c_str());
+  WSContentSend_P(PSTR("# TYPE tasmota_uptime_seconds gauge\ntasmota_uptime_seconds %d\n"), TasmotaGlobal.uptime);
   WSContentSend_P(PSTR("# TYPE tasmota_boot_count counter\ntasmota_boot_count %d\n"), Settings.bootcount);
   WSContentSend_P(PSTR("# TYPE tasmota_flash_writes_total counter\ntasmota_flash_writes_total %d\n"), Settings.save_flag);
 
@@ -49,17 +104,17 @@ void HandleMetrics(void)
   // Wi-Fi Signal strength
   WSContentSend_P(PSTR("# TYPE tasmota_wifi_station_signal_dbm gauge\ntasmota_wifi_station_signal_dbm{mac_address=\"%s\"} %d\n"), WiFi.BSSIDstr().c_str(), WiFi.RSSI());
 
-  if (!isnan(global_temperature_celsius)) {
-    dtostrfd(global_temperature_celsius, Settings.flag2.temperature_resolution, parameter);
-    WSContentSend_P(PSTR("# TYPE global_temperature_celsius gauge\nglobal_temperature_celsius %s\n"), parameter);
+  if (!isnan(TasmotaGlobal.temperature_celsius)) {
+    dtostrfd(TasmotaGlobal.temperature_celsius, Settings.flag2.temperature_resolution, parameter);
+    WSContentSend_P(PSTR("# TYPE tasmotaglobal_temperature_celsius gauge\ntasmotaglobal_temperature_celsius %s\n"), parameter);
   }
-  if (global_humidity != 0) {
-    dtostrfd(global_humidity, Settings.flag2.humidity_resolution, parameter);
-    WSContentSend_P(PSTR("# TYPE global_humidity gauge\nglobal_humidity %s\n"), parameter);
+  if (TasmotaGlobal.humidity != 0) {
+    dtostrfd(TasmotaGlobal.humidity, Settings.flag2.humidity_resolution, parameter);
+    WSContentSend_P(PSTR("# TYPE tasmotaglobal_humidity gauge\ntasmotaglobal_humidity %s\n"), parameter);
   }
-  if (global_pressure_hpa != 0) {
-    dtostrfd(global_pressure_hpa, Settings.flag2.pressure_resolution, parameter);
-    WSContentSend_P(PSTR("# TYPE global_pressure_hpa gauge\nglobal_pressure_hpa %s\n"), parameter);
+  if (TasmotaGlobal.pressure_hpa != 0) {
+    dtostrfd(TasmotaGlobal.pressure_hpa, Settings.flag2.pressure_resolution, parameter);
+    WSContentSend_P(PSTR("# TYPE tasmotaglobal_pressure_hpa gauge\ntasmotaglobal_pressure_hpa %s\n"), parameter);
   }
 
 #ifdef USE_ENERGY_SENSOR
@@ -75,19 +130,68 @@ void HandleMetrics(void)
   WSContentSend_P(PSTR("# TYPE energy_power_kilowatts_total counter\nenergy_power_kilowatts_total %s\n"), parameter);
 #endif
 
-/*
-  // Alternative method using the complete sensor JSON data
-  // For prometheus it may need to be decoded to # TYPE messages
-  mqtt_data[0] = '\0';
-  MqttShowSensor();
-  char json[strlen(mqtt_data) +1];
-  snprintf_P(json, sizeof(json), mqtt_data);
+  for (uint32_t device = 0; device < TasmotaGlobal.devices_present; device++) {
+    power_t mask = 1 << device;
+    WSContentSend_P(PSTR("# TYPE relay%d_state gauge\nrelay%d_state %d\n"), device+1, device+1, (TasmotaGlobal.power & mask));
+  }
 
-  // Do your Prometheus specific processing here.
-  // Look at function DisplayAnalyzeJson() in file xdrv_13_display.ino as an example how to decode the JSON message
-
-  WSContentSend_P(json);
-*/
+  ResponseClear();
+  MqttShowSensor(); //Pull sensor data
+  char json[strlen(TasmotaGlobal.mqtt_data)+1];
+  snprintf_P(json, sizeof(json), TasmotaGlobal.mqtt_data);
+  String jsonStr = json;
+  JsonParser parser((char *)jsonStr.c_str());
+  JsonParserObject root = parser.getRootObject();
+  if (root)
+  { // did JSON parsing went ok?
+    for (auto key1 : root)
+    {
+      JsonParserToken value1 = key1.getValue();
+      if (value1.isObject())
+      {
+        JsonParserObject Object2 = value1.getObject();
+        for (auto key2 : Object2)
+        {
+          JsonParserToken value2 = key2.getValue();
+          if (value2.isObject())
+          {
+            JsonParserObject Object3 = value2.getObject();
+            for (auto key3 : Object3)
+            {
+              const char *value = key3.getValue().getStr(nullptr);
+              if (value != nullptr && isdigit(value[0]))
+              {
+                const char *sensor = FormatMetricName(key2.getStr());                                                                                        //cleanup sensor name
+                const char *type = FormatMetricName(key3.getStr());                                                                                          //cleanup sensor type
+                const char *unit = UnitfromType(type);                                                                                                       //grab base unit corresponding to type
+                WSContentSend_P(PSTR("# TYPE tasmota_sensors_%s%s gauge\ntasmota_sensors_%s%s{sensor=\"%s\"} %s\n"), type, unit, type, unit, sensor, value); //build metric as "# TYPE tasmota_sensors_%type%_%unit% gauge\ntasmotasensors_%type%_%unit%{sensor=%sensor%"} %value%""
+              }
+            }
+          }
+          else
+          {
+            const char *value = value2.getStr(nullptr);
+            if (value != nullptr && isdigit(value[0]))
+            {
+              const char *sensor = FormatMetricName(key1.getStr());
+              const char *type = FormatMetricName(key2.getStr());
+              const char *unit = UnitfromType(type);
+              WSContentSend_P(PSTR("# TYPE tasmota_sensors_%s%s gauge\ntasmota_sensors_%s%s{sensor=\"%s\"} %s\n"), type, unit, type, unit, sensor, value);
+            }
+          }
+        }
+      }
+      else
+      {
+        const char *value = value1.getStr(nullptr);
+        if (value != nullptr && isdigit(value[0] && strcmp(key1.getStr(), "Time") != 0))  //remove false 'time' metric
+        { 
+          const char *sensor = FormatMetricName(key1.getStr());
+          WSContentSend_P(PSTR("# TYPE tasmota_sensors_%s gauge\ntasmota_sensors{sensor=\"%s\"} %s\n"), sensor, sensor, value);
+        }
+      }
+    }
+  }
 
   WSContentEnd();
 }
@@ -102,7 +206,7 @@ bool Xsns75(uint8_t function)
 
   switch (function) {
     case FUNC_WEB_ADD_HANDLER:
-      Webserver->on("/metrics", HandleMetrics);
+      WebServer_on(PSTR("/metrics"), HandleMetrics);
       break;
   }
   return result;

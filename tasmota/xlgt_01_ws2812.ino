@@ -63,7 +63,21 @@ void (* const Ws2812Command[])(void) PROGMEM = {
 
 #ifdef USE_WS2812_DMA
 
+#ifdef USE_WS2812_INVERTED
 // See NeoEspDmaMethod.h for available options
+
+#if (USE_WS2812_HARDWARE == NEO_HW_WS2812X)
+  typedef NeoEsp8266DmaInvertedWs2812xMethod selectedNeoSpeedType;
+#elif (USE_WS2812_HARDWARE == NEO_HW_SK6812)
+  typedef NeoEsp8266DmaInvertedSk6812Method selectedNeoSpeedType;
+#elif (USE_WS2812_HARDWARE == NEO_HW_APA106)
+  typedef NeoEsp8266DmaInvertedApa106Method selectedNeoSpeedType;
+#else   // USE_WS2812_HARDWARE
+  typedef NeoEsp8266DmaInverted800KbpsMethod selectedNeoSpeedType;
+#endif  // USE_WS2812_HARDWARE
+
+#else  // No USE_WS2812_INVERTED
+
 #if (USE_WS2812_HARDWARE == NEO_HW_WS2812X)
   typedef NeoEsp8266DmaWs2812xMethod selectedNeoSpeedType;
 #elif (USE_WS2812_HARDWARE == NEO_HW_SK6812)
@@ -74,9 +88,23 @@ void (* const Ws2812Command[])(void) PROGMEM = {
   typedef NeoEsp8266Dma800KbpsMethod selectedNeoSpeedType;
 #endif  // USE_WS2812_HARDWARE
 
-#else   // USE_WS2812_DMA
+#endif  // No USE_WS2812_INVERTED
 
+#else   // No USE_WS2812_DMA
+
+#ifdef USE_WS2812_INVERTED
 // See NeoEspBitBangMethod.h for available options
+
+#if (USE_WS2812_HARDWARE == NEO_HW_WS2812X)
+  typedef NeoEsp8266BitBangWs2812xInvertedMethod selectedNeoSpeedType;
+#elif (USE_WS2812_HARDWARE == NEO_HW_SK6812)
+  typedef NeoEsp8266BitBangSk6812InvertedMethod selectedNeoSpeedType;
+#else   // USE_WS2812_HARDWARE
+  typedef NeoEsp8266BitBang400KbpsInvertedMethod selectedNeoSpeedType;
+#endif  // USE_WS2812_HARDWARE
+
+#else  // No USE_WS2812_INVERTED
+
 #if (USE_WS2812_HARDWARE == NEO_HW_WS2812X)
   typedef NeoEsp8266BitBangWs2812xMethod selectedNeoSpeedType;
 #elif (USE_WS2812_HARDWARE == NEO_HW_SK6812)
@@ -85,7 +113,9 @@ void (* const Ws2812Command[])(void) PROGMEM = {
   typedef NeoEsp8266BitBang800KbpsMethod selectedNeoSpeedType;
 #endif  // USE_WS2812_HARDWARE
 
-#endif  // USE_WS2812_DMA
+#endif  // No USE_WS2812_INVERTED
+
+#endif  // No USE_WS2812_DMA
 
 NeoPixelBus<selectedNeoFeatureType, selectedNeoSpeedType> *strip = nullptr;
 
@@ -274,22 +304,15 @@ void Ws2812Gradient(uint32_t schemenr)
   WsColor oldColor, currentColor;
   Ws2812GradientColor(schemenr, &oldColor, range, gradRange, offset);
   currentColor = oldColor;
+  speed = speed ? speed : 1;    // should never happen, just avoid div0
   for (uint32_t i = 0; i < Settings.light_pixels; i++) {
     if (kWsRepeat[Settings.light_width] > 1) {
-      Ws2812GradientColor(schemenr, &currentColor, range, gradRange, i +offset);
+      Ws2812GradientColor(schemenr, &currentColor, range, gradRange, i + offset + 1);
     }
-    if (Settings.light_speed > 0) {
-      // Blend old and current color based on time for smooth movement.
-      c.R = map(Light.strip_timer_counter % speed, 0, speed, oldColor.red, currentColor.red);
-      c.G = map(Light.strip_timer_counter % speed, 0, speed, oldColor.green, currentColor.green);
-      c.B = map(Light.strip_timer_counter % speed, 0, speed, oldColor.blue, currentColor.blue);
-    }
-    else {
-      // No animation, just use the current color.
-      c.R = currentColor.red;
-      c.G = currentColor.green;
-      c.B = currentColor.blue;
-    }
+    // Blend old and current color based on time for smooth movement.
+    c.R = map(Light.strip_timer_counter % speed, 0, speed, oldColor.red, currentColor.red);
+    c.G = map(Light.strip_timer_counter % speed, 0, speed, oldColor.green, currentColor.green);
+    c.B = map(Light.strip_timer_counter % speed, 0, speed, oldColor.blue, currentColor.blue);
     strip->SetPixelColor(i, c);
     oldColor = currentColor;
   }
@@ -431,7 +454,7 @@ void Ws2812ShowScheme(void)
 
   switch (scheme) {
     case 0:  // Clock
-      if ((1 == state_250mS) || (Ws2812.show_next)) {
+      if ((1 == TasmotaGlobal.state_250mS) || (Ws2812.show_next)) {
         Ws2812Clock();
         Ws2812.show_next = 0;
       }
@@ -461,11 +484,11 @@ void Ws2812ModuleSelected(void)
     Light.max_scheme += WS2812_SCHEMES;
 
 #if (USE_WS2812_CTYPE > NEO_3LED)
-    light_type = LT_RGBW;
+    TasmotaGlobal.light_type = LT_RGBW;
 #else
-    light_type = LT_RGB;
+    TasmotaGlobal.light_type = LT_RGB;
 #endif
-    light_flg = XLGT_01;
+    TasmotaGlobal.light_driver = XLGT_01;
   }
 }
 

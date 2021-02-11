@@ -80,8 +80,10 @@
 #define D_DISABLED "Désactivé"
 #define D_DISTANCE "Distance"
 #define D_DNS_SERVER "Serveur DNS"
+#define D_DO "Disolved Oxygen"
 #define D_DONE "Terminé"
 #define D_DST_TIME "DST"
+#define D_EC "EC"
 #define D_ECO2 "eCO₂"
 #define D_EMULATION "Émulation"
 #define D_ENABLED "Activé"
@@ -120,12 +122,15 @@
 #define D_MULTI_PRESS "multi-pression"
 #define D_NOISE "Bruit"
 #define D_NONE "Aucun"
+#define D_O2 "Oxygen"
 #define D_OFF "Arrêt"
 #define D_OFFLINE "Déconnecté"
 #define D_OK "Ok"
 #define D_ON "Marche"
 #define D_ONLINE "Connecté"
+#define D_ORP "ORP"
 #define D_PASSWORD "Mot de passe"
+#define D_PH "pH"
 #define D_PORT "Port"
 #define D_POWER_FACTOR "Fact de puiss"
 #define D_POWERUSAGE "Puissance"
@@ -183,6 +188,7 @@
 #define D_UV_POWER "Puissance UV"
 #define D_VERSION "Version"
 #define D_VOLTAGE "Tension"
+#define D_VOLUME "Volume"
 #define D_WEIGHT "Poids"
 #define D_WARMLIGHT "Chaud"
 #define D_WEB_SERVER "Serveur web"
@@ -351,7 +357,7 @@
 #define D_TRANSFER_STARTED "Transfert lancé"
 #define D_UPLOAD_ERR_1 "Aucun fichier sélectionné"
 #define D_UPLOAD_ERR_2 "Espace insuffisant"
-#define D_UPLOAD_ERR_3 "L'octet magique n'est pas 0xE9"
+#define D_UPLOAD_ERR_3 "Invalid file signature"
 #define D_UPLOAD_ERR_4 "La taille du programme à flasher est plus grande que la taille réelle de la mémoire flash"
 #define D_UPLOAD_ERR_5 "Erreur de comparaison du buffer de téléchargement"
 #define D_UPLOAD_ERR_6 "Téléchargement échoué. Activer WebLog 3"
@@ -596,6 +602,8 @@
 #define D_SENSOR_SDM120_RX     "SDMx20 RX"
 #define D_SENSOR_SDM630_TX     "SDM630 TX"
 #define D_SENSOR_SDM630_RX     "SDM630 RX"
+#define D_SENSOR_WE517_TX      "WE517 Tx"
+#define D_SENSOR_WE517_RX      "WE517 Rx"
 #define D_SENSOR_TM1638_CLK    "TM16 CLK"
 #define D_SENSOR_TM1638_DIO    "TM16 DIO"
 #define D_SENSOR_TM1638_STB    "TM16 STB"
@@ -659,8 +667,10 @@
 #define D_SENSOR_A4988_STP     "A4988 STP"
 #define D_SENSOR_A4988_ENA     "A4988 ENA"
 #define D_SENSOR_A4988_MS1     "A4988 MS1"
-#define D_SENSOR_A4988_MS2     "A4988 MS2"
-#define D_SENSOR_A4988_MS3     "A4988 MS3"
+#define D_SENSOR_OUTPUT_HI     "Output Hi"
+#define D_SENSOR_OUTPUT_LO     "Output Lo"
+#define D_SENSOR_AS608_TX      "AS608 Tx"
+#define D_SENSOR_AS608_RX      "AS608 Rx"
 #define D_SENSOR_DDS2382_TX    "DDS238-2 TX"
 #define D_SENSOR_DDS2382_RX    "DDS238-2 RX"
 #define D_SENSOR_DDSU666_TX    "DDSU666 TX"
@@ -715,6 +725,12 @@
 #define D_SENSOR_TCP_RXD       "TCP Rx"
 #define D_SENSOR_IEM3000_TX    "iEM3000 TX"
 #define D_SENSOR_IEM3000_RX    "iEM3000 RX"
+#define D_SENSOR_MIEL_HVAC_TX  "MiEl HVAC Tx"
+#define D_SENSOR_MIEL_HVAC_RX  "MiEl HVAC Rx"
+#define D_SENSOR_SHELLY_DIMMER_BOOT0 "SHD Boot 0"
+#define D_SENSOR_SHELLY_DIMMER_RST_INV "SHD Reset"
+#define D_SENSOR_RC522_RST     "RC522 Rst"
+
 // Units
 #define D_UNIT_AMPERE "A"
 #define D_UNIT_CELSIUS "C"
@@ -732,14 +748,19 @@
 #define D_UNIT_KILOMETER_PER_HOUR "km/h"
 #define D_UNIT_KILOOHM "kΩ"
 #define D_UNIT_KILOWATTHOUR "kWh"
+#define D_UNIT_LITERS "L"
+#define D_UNIT_LITERS_PER_MIN "L/m"
 #define D_UNIT_LUX "lx"
 #define D_UNIT_MICROGRAM_PER_CUBIC_METER "µg/m³"
 #define D_UNIT_MICROMETER "µm"
 #define D_UNIT_MICROSECOND "µs"
+#define D_UNIT_MICROSIEMENS_PER_CM "µS/cm"
 #define D_UNIT_MILLIAMPERE "mA"
+#define D_UNIT_MILLILITERS "ml"
 #define D_UNIT_MILLIMETER "mm"
 #define D_UNIT_MILLIMETER_MERCURY "mmHg"
 #define D_UNIT_MILLISECOND "ms"
+#define D_UNIT_MILLIVOLT "mV"
 #define D_UNIT_MINUTE "min"  // https://fr.wikipedia.org/wiki/Minute_(temps)#Symbole%20et%20d%C3%A9finition
 #define D_UNIT_PARTS_PER_BILLION "ppb"
 #define D_UNIT_PARTS_PER_DECILITER "ppd"
@@ -834,4 +855,39 @@
 #define D_OVERLOAD        "ADPS"
 #define D_MAX_POWER       "Puissance max"
 #define D_MAX_CURRENT     "Courant max"
+
+// xsns_79_as608.ino
+#define D_FP_ENROLL_PLACEFINGER "Place finger"
+#define D_FP_ENROLL_REMOVEFINGER "Remove finger"
+#define D_FP_ENROLL_PLACESAMEFINGER "Place same finger again"
+#define D_FP_ENROLL_RETRY "Error so retry"
+#define D_FP_ENROLL_RESTART "Restart"
+#define D_FP_ENROLL_ERROR "Error"
+#define D_FP_ENROLL_RESET "Reset"
+#define D_FP_ENROLL_ACTIVE "Active"
+#define D_FP_ENROLL_INACTIVE "Inactive"
+// Indexed by Adafruit_Fingerprint.h defines
+#define D_FP_PACKETRECIEVEERR "Comms error"    // 0x01 Error when receiving data package
+#define D_FP_NOFINGER ""                       // 0x02 No finger on the sensor
+#define D_FP_IMAGEFAIL "Imaging error"         // 0x03 Failed to enroll the finger
+#define D_FP_IMAGEMESS "Image too messy"       // 0x06 Failed to generate character file due to overly disorderly fingerprint image
+#define D_FP_FEATUREFAIL "Fingerprint too small" // 0x07 Failed to generate character file due to the lack of character point or small fingerprint image
+#define D_FP_NOMATCH "No match"                // 0x08 Finger doesn't match
+#define D_FP_NOTFOUND "Did not find a match"   // 0x09 Failed to find matching finger
+#define D_FP_ENROLLMISMATCH "Fingerprint did not match" // 0x0A Failed to combine the character files
+#define D_FP_BADLOCATION "Bad location"        // 0x0B Addressed PageID is beyond the finger library
+#define D_FP_DBRANGEFAIL "DB range error"      // 0x0C Error when reading template from library or invalid template
+#define D_FP_UPLOADFEATUREFAIL "Upload feature error" // 0x0D Error when uploading template
+#define D_FP_PACKETRESPONSEFAIL "Packet response error" // 0x0E Module failed to receive the following data packages
+#define D_FP_UPLOADFAIL "Upload error"         // 0x0F Error when uploading image
+#define D_FP_DELETEFAIL "Delete error"         // 0x10 Failed to delete the template
+#define D_FP_DBCLEARFAIL "DB Clear error"      // 0x11 Failed to clear finger library
+#define D_FP_PASSFAIL "Password error"         // 0x13 Find whether the fingerprint passed or failed
+#define D_FP_INVALIDIMAGE "Image invalid"      // 0x15 Failed to generate image because of lac of valid primary image
+#define D_FP_FLASHERR "Flash write error"      // 0x18 Error when writing flash
+#define D_FP_INVALIDREG "Invalid number"       // 0x1A Invalid register number
+#define D_FP_ADDRCODE "Address code"           // 0x20 Address code
+#define D_FP_PASSVERIFY "Password verified"    // 0x21 Verify the fingerprint passed
+#define D_FP_UNKNOWNERROR "Error"              // Any other error
+
 #endif  // _LANGUAGE_FR_FR_H_

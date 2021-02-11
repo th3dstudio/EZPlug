@@ -2,7 +2,7 @@
 
 ## Features
 
-- Built on Tasmota 8.5.X
+- Built on Tasmota 9.2.0
 - Presetup for our EZPlug products
 - Home Assistant discovery enabled by default
 - Works with OctoPrint-Tasmota plugin for Octoprint

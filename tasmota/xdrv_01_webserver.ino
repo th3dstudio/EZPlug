@@ -34,17 +34,18 @@
 const uint16_t CHUNKED_BUFFER_SIZE = (MESSZ / 2) - 100;  // Chunk buffer size (should be smaller than half mqtt_data size = MESSZ)
 
 const uint16_t HTTP_REFRESH_TIME = 2345;                 // milliseconds
-const uint16_t HTTP_RESTART_RECONNECT_TIME = 9000;       // milliseconds - Allow time for restart and wifi reconnect
-const uint16_t HTTP_OTA_RESTART_RECONNECT_TIME = 20000;  // milliseconds - Allow time for uploading binary, unzip/write to final destination and wifi reconnect
+const uint16_t HTTP_RESTART_RECONNECT_TIME = 10000;      // milliseconds - Allow time for restart and wifi reconnect
+#ifdef ESP8266
+const uint16_t HTTP_OTA_RESTART_RECONNECT_TIME = 24000;  // milliseconds - Allow time for uploading binary, unzip/write to final destination and wifi reconnect
+#endif  // ESP8266
+#ifdef ESP32
+const uint16_t HTTP_OTA_RESTART_RECONNECT_TIME = 10000;  // milliseconds - Allow time for restart and wifi reconnect
+#endif  // ESP32
 
 #include <ESP8266WebServer.h>
 #include <DNSServer.h>
 
-#ifdef USE_RF_FLASH
-uint8_t *efm8bb1_update = nullptr;
-#endif  // USE_RF_FLASH
-
-enum UploadTypes { UPL_TASMOTA, UPL_SETTINGS, UPL_EFM8BB1, UPL_TASMOTACLIENT, UPL_EFR32 };
+enum UploadTypes { UPL_TASMOTA, UPL_SETTINGS, UPL_EFM8BB1, UPL_TASMOTACLIENT, UPL_EFR32, UPL_SHD, UPL_CCL };
 
 #ifdef USE_UNISHOX_COMPRESSION
 #ifdef USE_JAVASCRIPT_ES6
@@ -133,7 +134,7 @@ const char HTTP_SCRIPT_COUNTER[] PROGMEM =
 
 #ifdef USE_UNISHOX_COMPRESSION
 #ifdef USE_SCRIPT_WEB_DISPLAY
-const size_t HTTP_SCRIPT_ROOT_SIZE = 706;
+const size_t HTTP_SCRIPT_ROOT_SIZE = 744;
 const char HTTP_SCRIPT_ROOT_COMPRESSED[] PROGMEM = "\x33\xBF\xAF\x98\xF0\xA3\xE1\xC8\x78\x23\x02\xF8\x3A\xDC\xE4\x15\x9D\xD1\x87\x78"
                              "\xF6\x99\xDF\xD5\x9F\x0F\xB3\xEC\xF1\xA6\x0E\xE8\x56\x74\xBF\x8F\x0B\x1A\xFA\xBC"
                              "\x74\x09\xF0\xF5\x0A\x3E\x1F\x0E\x43\xBC\x7B\x4A\xCF\x83\x0F\x01\x84\xEF\xE5\x5A"
@@ -146,21 +147,23 @@ const char HTTP_SCRIPT_ROOT_COMPRESSED[] PROGMEM = "\x33\xBF\xAF\x98\xF0\xA3\xE1
                              "\xC0\xAC\x36\x77\x4E\xC3\xDB\x47\xB8\xEC\x1E\x3A\x8F\x61\xE9\x56\x38\x26\xBD\x46"
                              "\x41\x33\xE1\xF6\x3F\xA2\x50\xA3\xCC\xE4\x6C\xFA\x3E\x8F\xB3\xF0\xF6\x1D\xE2\x04"
                              "\x6C\x2B\xC0\x85\x85\x7C\xFC\x3D\x28\x50\x24\xD7\x1A\x08\x35\xCE\xCA\x14\x7E\x1E"
-                             "\x94\x20\x24\xD8\x60\x87\x60\x43\xF0\xF4\x3B\x2B\xE0\x93\x64\x33\xDC\x76\x0F\x1D"
-                             "\x47\xB0\xFA\x3E\x8F\xB3\xF0\xF4\x13\x4C\xC1\x0F\x60\xA6\x6C\xA3\xAE\xC2\xD1\xEE"
-                             "\x3C\xC3\x7D\x4F\xE7\x83\x19\xD4\x75\x8F\xBD\x1E\x15\x47\x99\xEC\x3B\xC7\x86\x38"
-                             "\xEE\x9F\x61\x1C\x87\xD9\xDE\x3A\x16\xF7\x3F\x90\xA2\xA2\x1A\x41\x1F\x3C\x78\x3D"
-                             "\xC7\xB8\xF1\xA6\x11\xDD\xF9\x8F\x0A\x3B\xC8\xF6\x9B\x0E\x98\x31\xF1\xDD\x3E\xC8"
-                             "\x78\x99\x51\xF6\x75\x1F\x67\x43\xB4\x34\xF8\x72\x1F\x67\x6C\xAC\xEA\xAF\x8B\x67"
-                             "\x78\xF0\x6C\x3A\x79\xF0\x87\x74\xEF\x1E\x02\xA3\xE7\x9D\x02\x27\x20\x36\x75\x1F"
-                             "\x42\x1D\xE3\xC1\xEE\x3D\xC0\x89\xCA\x77\x99\x9D\x9D\xD1\x97\xF3\xAB\x4C\xEF\xE7"
-                             "\x78\xF6\x85\x67\x74\xFB\x3F\x5E\x33\x3E\x1F\x67\x6F\x4C\xEF\xE7\x6C\xFB\x3F\x67"
-                             "\xD9\xDB\x19\x7F\x3B\xC7\x80\x46\xC3\x74\x12\x30\xD0\x42\xE6\x78\x14\xF1\x4F\x98"
-                             "\xF0\xA3\xE1\xC6\x40\x8D\x8D\x8C\xF9\xDD\x30\x77\x8F\x6E\x98\x47\x74\xC1\xDE\x47"
-                             "\xB4\x14\x37\xA0\x42\xCB\xCF\x72\x61\x79\xA3\xDA\x09\x9C\xE1\x02\x1E\x60\x7B\x8D";
+                             "\x94\x20\x24\xE4\xE7\x29\x90\xC3\x61\xE0\x7C\x56\xD3\x3A\xFC\x32\xC3\x67\x9F\x60"
+                             "\xFF\xEC\x60\x25\x67\x2C\x10\xF1\xE1\x0F\xC3\xD0\xEC\xAF\x82\x4D\x90\xCF\x71\xD8"
+                             "\x3C\x75\x1E\xC3\xE8\xFA\x3E\xCF\xC3\xD0\x4D\x33\x04\x3C\xEE\x99\xB2\x8E\xBB\x0B"
+                             "\x47\xB8\xF3\x0D\xF5\x3F\x9E\x0C\x67\x51\xD6\x3E\xF4\x78\x55\x1E\x67\xB0\xEF\x1E"
+                             "\x18\xE3\xBA\x7D\x84\x72\x1F\x67\x78\xE8\x5B\xDC\xFE\x42\x8A\x88\x69\x04\x7C\xF1"
+                             "\xE0\xF7\x1E\xE3\xC6\x98\x47\x77\xE6\x3C\x28\xEF\x23\xDA\x6C\x3A\x60\xC7\xC7\x74"
+                             "\xFB\x21\xE2\x65\x47\xD9\xD4\x7D\x9D\x0E\xD0\xD3\xE1\xC8\x7D\x9D\xB2\xB3\xAA\xBE"
+                             "\x2D\x9D\xE3\xC1\xB0\xE9\xE7\xC2\x1D\xD3\xBC\x78\x0A\x8F\x9E\x74\x08\x9C\x93\xD9"
+                             "\xD4\x7D\x08\x77\x8F\x07\xB8\xF7\x02\x27\x2E\x9E\x66\x76\x77\x46\x5F\xCE\xAD\x33"
+                             "\xBF\x9D\xE3\xDA\x15\x9D\xD3\xEC\xFD\x78\xCC\xF8\x7D\x9D\xBD\x33\xBF\x9D\xB3\xEC"
+                             "\xFD\x9F\x67\x6C\x65\xFC\xEF\x1E\x01\x1B\x0D\xD0\x48\xC3\x41\x0B\x9C\x40\x53\xC5"
+                             "\x3E\x63\xC2\x8F\x87\x19\x02\x36\x36\x33\xE7\x74\xC1\xDE\x3D\xBA\x61\x1D\xD3\x07"
+                             "\x79\x1E\xD0\x50\xDE\x81\x0B\x2F\x3D\xC9\x85\xE6\x8F\x68\x26\x73\xD0\x08\x79\x81"
+                             "\xEE";
 #define  HTTP_SCRIPT_ROOT       Decompress(HTTP_SCRIPT_ROOT_COMPRESSED,HTTP_SCRIPT_ROOT_SIZE).c_str()
 #else
-const size_t HTTP_SCRIPT_ROOT_SIZE = 486;
+const size_t HTTP_SCRIPT_ROOT_SIZE = 524;
 const char HTTP_SCRIPT_ROOT_COMPRESSED[] PROGMEM = "\x30\x2F\x83\xAD\xCE\x41\x59\xDD\x18\x77\x8F\x69\x9D\xFD\x59\xF0\xFB\x3E\xCF\x1A"
                              "\x60\xEE\x85\x67\x4B\xF8\xF0\xB1\xAF\xAB\xC7\x40\x9F\x0F\x50\xA3\xE1\xF0\xE4\x3B"
                              "\xC7\xB4\xAC\xF8\x30\xF0\x18\x4E\xFE\x55\xA3\x5E\x0B\xA3\xBA\x15\x1D\xE3\xC1\xEE"
@@ -172,14 +175,15 @@ const char HTTP_SCRIPT_ROOT_COMPRESSED[] PROGMEM = "\x30\x2F\x83\xAD\xCE\x41\x59
                              "\x4F\xBF\x0C\xCE\xF3\x2A\x2B\x66\xCA\x3A\x7D\x8C\x0A\xC3\x67\x74\xEC\x3D\xB4\x7B"
                              "\x8E\xC1\xE3\xA8\xF6\x1E\x95\x63\x82\x6B\xD4\x64\x13\x3E\x1F\x63\xFA\x25\x0A\x3C"
                              "\xCE\x46\xCF\xA3\xE8\xFB\x3F\x0F\x61\xDE\x20\x46\xC2\xBC\x08\x58\x57\xCF\xC3\xD2"
-                             "\x85\x02\x4D\x71\xA0\x83\x5C\xEC\xA1\x47\xE1\xE9\x42\x02\x4D\x86\x08\x76\x04\x3F"
-                             "\x0F\x43\xB2\xBE\x09\x36\x43\x3D\xC7\x60\xF1\xD4\x7B\x0F\xA3\xE8\xFB\x3F\x0F\x41"
-                             "\x34\xCC\x10\xF6\x0A\x66\xCA\x3A\xEC\x2D\x1E\xE3\xCC\x37\xD4\xFE\x78\x31\x9D\x47"
-                             "\x58\xFB\xD1\xE1\x54\x79\x9E\xC3\xBC\x78\x63\x8E\xE9\xF6\x11\xC8\x7D\x9D\xE3\xA1"
-                             "\x6F\x73\xF9\x0A\x2A\x2B\x21\xA4\x11\xF3\xC7\x83\xDC\x7B\x8F\x06\xC3\xA6\x0C\x7C"
-                             "\x77\x4F\xB2\x1E\x26\x54\x7D\x9D\x47\xD9\xD0\xED\x0D\x3E\x1C\x87\xD9\xDB\x2B\x3A"
-                             "\xAB\xE2\xD9\xDE\x3C\x1B\x0E\x9E\x7C\x21\xDD\x3B\xC7\x80\xA8\xF9\xE7\x40\x89\xC7"
-                             "\xB5\x9D\x47\xD0\x87\x78\xF0\x7B\x8D";
+                             "\x85\x02\x4D\x71\xA0\x83\x5C\xEC\xA1\x47\xE1\xE9\x42\x02\x4E\x4E\x72\x99\x0C\x36"
+                             "\x1E\x07\xC5\x6D\x33\xAF\xC3\x2C\x36\x79\xF6\x0F\xFE\xC6\x02\x56\x72\xC1\x0F\x1E"
+                             "\x10\xFC\x3D\x0E\xCA\xF8\x24\xD9\x0C\xF7\x1D\x83\xC7\x51\xEC\x3E\x8F\xA3\xEC\xFC"
+                             "\x3D\x04\xD3\x30\x43\xCE\xE9\x9B\x28\xEB\xB0\xB4\x7B\x8F\x30\xDF\x53\xF9\xE0\xC6"
+                             "\x75\x1D\x63\xEF\x47\x85\x51\xE6\x7B\x0E\xF1\xE1\x8E\x3B\xA7\xD8\x47\x21\xF6\x77"
+                             "\x8E\x85\xBD\xCF\xE4\x28\xA8\x86\x90\x47\xCF\x1E\x0F\x71\xEE\x3C\x1B\x0E\x98\x31"
+                             "\xF1\xDD\x3E\xC8\x78\x99\x51\xF6\x75\x1F\x67\x43\xB4\x34\xF8\x72\x1F\x67\x6C\xAC"
+                             "\xEA\xAF\x8B\x67\x78\xF0\x6C\x3A\x79\xF0\x87\x74\xEF\x1E\x02\xA3\xE7\x9D\x02\x27"
+                             "\x23\x96\x75\x1F\x42\x1D\xE3\xC1\xEE";
 #define  HTTP_SCRIPT_ROOT       Decompress(HTTP_SCRIPT_ROOT_COMPRESSED,HTTP_SCRIPT_ROOT_SIZE).c_str()
 #endif  // USE_SCRIPT_WEB_DISPLAY
 #else
@@ -196,7 +200,12 @@ const char HTTP_SCRIPT_ROOT[] PROGMEM =
     "x=new XMLHttpRequest();"
     "x.onreadystatechange=function(){"
       "if(x.readyState==4&&x.status==200){"
-        "var s=x.responseText.replace(/{t}/g,\"<table style='width:100%%'>\").replace(/{s}/g,\"<tr><th>\").replace(/{m}/g,\"</th><td>\").replace(/{e}/g,\"</td></tr>\").replace(/{c}/g,\"%%'><div style='text-align:center;font-weight:\");"
+        "var s=x.responseText.replace(/{t}/g,\"<table style='width:100%%'>\")"
+                            ".replace(/{s}/g,\"<tr><th>\")"
+//                            ".replace(/{m}/g,\"</th><td>\")"
+                            ".replace(/{m}/g,\"</th><td style='width:20px;white-space:nowrap'>\")"  // I want a right justified column with left justified text
+                            ".replace(/{e}/g,\"</td></tr>\")"
+                            ".replace(/{c}/g,\"%%'><div style='text-align:center;font-weight:\");"
         "eb('l1').innerHTML=s;"
       "}"
     "};"
@@ -234,7 +243,12 @@ const char HTTP_SCRIPT_ROOT[] PROGMEM =
     "x=new XMLHttpRequest();"
     "x.onreadystatechange=function(){"
       "if(x.readyState==4&&x.status==200){"
-        "var s=x.responseText.replace(/{t}/g,\"<table style='width:100%%'>\").replace(/{s}/g,\"<tr><th>\").replace(/{m}/g,\"</th><td>\").replace(/{e}/g,\"</td></tr>\").replace(/{c}/g,\"%%'><div style='text-align:center;font-weight:\");"
+        "var s=x.responseText.replace(/{t}/g,\"<table style='width:100%%'>\")"
+                            ".replace(/{s}/g,\"<tr><th>\")"
+//                            ".replace(/{m}/g,\"</th><td>\")"
+                            ".replace(/{m}/g,\"</th><td style='width:20px;white-space:nowrap'>\")"  // I want a right justified column with left justified text
+                            ".replace(/{e}/g,\"</td></tr>\")"
+                            ".replace(/{c}/g,\"%%'><div style='text-align:center;font-weight:\");"
         "eb('l1').innerHTML=s;"
       "}"
     "};"
@@ -368,16 +382,12 @@ const char HTTP_SCRIPT_CONSOL[] PROGMEM =
   "wl(h);";                               // Add console command key eventlistener after name has been synced with id (= wl(jd))
 #endif //USE_UNISHOX_COMPRESSION
 
-const char HTTP_MODULE_TEMPLATE_REPLACE[] PROGMEM =
-  "}2%d'>%s (%d}3";                       // }2 and }3 are used in below os.replace
-
 const char HTTP_MODULE_TEMPLATE_REPLACE_INDEX[] PROGMEM =
   "}2%d'>%s (%d)}3";                       // }2 and }3 are used in below os.replace
 const char HTTP_MODULE_TEMPLATE_REPLACE_NO_INDEX[] PROGMEM =
   "}2%d'>%s}3";                           // }2 and }3 are used in below os.replace
 
-#if defined(USE_UNISHOX_COMPRESSION) && defined(ESP32)
-// no compression on ESP8266, we would lose 16 bytes
+#if defined(USE_UNISHOX_COMPRESSION)
 const size_t HTTP_SCRIPT_MODULE_TEMPLATE_SIZE = 602;
 const char HTTP_SCRIPT_MODULE_TEMPLATE_COMPRESSED[] PROGMEM = "\x33\xBF\xAC\xF1\xD4\x2B\xC7\x83\x02\xF8\x3A\xDC\xE4\x1B\x3B\xBA\x75\x1A\x8E\xF1"
                              "\xED\x33\xBF\xAC\x3E\x09\x81\x8B\x1A\xFA\x8E\x81\xFD\xDD\x32\x61\x31\xAF\xA8\xEE"
@@ -405,14 +415,6 @@ const char HTTP_SCRIPT_MODULE_TEMPLATE_COMPRESSED[] PROGMEM = "\x33\xBF\xAC\xF1\
 #define  HTTP_SCRIPT_MODULE_TEMPLATE       Decompress(HTTP_SCRIPT_MODULE_TEMPLATE_COMPRESSED,HTTP_SCRIPT_MODULE_TEMPLATE_SIZE).c_str()
 #else
 const char HTTP_SCRIPT_MODULE_TEMPLATE[] PROGMEM =
-#ifdef ESP8266
-  "var os;"
-  "function sk(s,g){"                     // s = value, g = id and name
-    "var o=os.replace(/}2/g,\"<option value='\").replace(/}3/g,\")</option>\");"
-    "eb('g'+g).innerHTML=o;"
-    "eb('g'+g).value=s;"
-  "}";
-#else  // ESP32
   "var os,hs;"
   "function ce(i,q){"                     // Create index select
     "var o=document.createElement('option');"
@@ -436,7 +438,6 @@ const char HTTP_SCRIPT_MODULE_TEMPLATE[] PROGMEM =
     "eb('g'+g).value=(g<99)?s&0xffe0:s;"
     "if(g<99){ot(g,s);}"
   "}";
-#endif  // ESP8266 - ESP32
 #endif //USE_UNISHOX_COMPRESSION
 
 #ifdef USE_UNISHOX_COMPRESSION
@@ -486,13 +487,13 @@ const char HTTP_SCRIPT_TEMPLATE2[] PROGMEM =
       "if(8==i){j=12;}"
       "sk(g[i],j);"                       // Set GPIO
       "j++;"
-    "}"
-    "g=o.shift();";                       // FLAG
+    "}";
 const char HTTP_SCRIPT_TEMPLATE3[] PROGMEM =
     "\";"
-    "sk(g&15," STR(ADC0_PIN) ");"         // Set ADC0
-    "g>>=4;";
+    "sk(g[13]," STR(ADC0_PIN) ");";       // Set ADC0
+
 const char HTTP_SCRIPT_TEMPLATE4[] PROGMEM =
+    "g=o.shift();"                        // FLAG
     "for(i=0;i<" STR(GPIO_FLAG_USED) ";i++){"
       "p=(g>>i)&1;"
       "eb('c'+i).checked=p;"              // Set FLAG checkboxes
@@ -805,12 +806,7 @@ const char kLoggingLevels[] PROGMEM = D_NONE "|" D_ERROR "|" D_INFO "|" D_DEBUG 
 const char kEmulationOptions[] PROGMEM = D_NONE "|" D_BELKIN_WEMO "|" D_HUE_BRIDGE;
 
 const char kUploadErrors[] PROGMEM =
-  D_UPLOAD_ERR_1 "|" D_UPLOAD_ERR_2 "|" D_UPLOAD_ERR_3 "|" D_UPLOAD_ERR_4 "|" D_UPLOAD_ERR_5 "|" D_UPLOAD_ERR_6 "|" D_UPLOAD_ERR_7 "|" D_UPLOAD_ERR_8 "|" D_UPLOAD_ERR_9
-#ifdef USE_RF_FLASH
-  "|" D_UPLOAD_ERR_10 "|" D_UPLOAD_ERR_11 "|" D_UPLOAD_ERR_12 "|" D_UPLOAD_ERR_13
-#endif
-  "|" D_UPLOAD_ERR_14
-  ;
+  D_UPLOAD_ERR_1 "|" D_UPLOAD_ERR_2 "|" D_UPLOAD_ERR_3 "|" D_UPLOAD_ERR_4 "|" D_UPLOAD_ERR_5 "|" D_UPLOAD_ERR_6 "|" D_UPLOAD_ERR_7 "|" D_UPLOAD_ERR_8 "|" D_UPLOAD_ERR_9;
 
 const uint16_t DNS_PORT = 53;
 enum HttpOptions {HTTP_OFF, HTTP_USER, HTTP_ADMIN, HTTP_MANAGER, HTTP_MANAGER_RESET_ONLY};
@@ -820,14 +816,14 @@ ESP8266WebServer *Webserver;
 
 struct WEB {
   String chunk_buffer = "";                         // Could be max 2 * CHUNKED_BUFFER_SIZE
-  bool reset_web_log_flag = false;                  // Reset web console log
+  uint16_t upload_progress_dot_count;
+  uint16_t upload_error = 0;
   uint8_t state = HTTP_OFF;
-  uint8_t upload_error = 0;
   uint8_t upload_file_type;
-  uint8_t upload_progress_dot_count;
   uint8_t config_block_count = 0;
   uint8_t config_xor_on = 0;
   uint8_t config_xor_on_set = CONFIG_FILE_XOR;
+  bool reset_web_log_flag = false;                  // Reset web console log
 } Web;
 
 // Helper function to avoid code duplication (saves 4k Flash)
@@ -846,15 +842,54 @@ void ShowWebSource(uint32_t source)
 {
   if ((source > 0) && (source < SRC_MAX)) {
     char stemp1[20];
-    AddLog_P2(LOG_LEVEL_DEBUG, PSTR("SRC: %s from %s"), GetTextIndexed(stemp1, sizeof(stemp1), source, kCommandSource), Webserver->client().remoteIP().toString().c_str());
+    AddLog_P(LOG_LEVEL_DEBUG, PSTR("SRC: %s from %s"), GetTextIndexed(stemp1, sizeof(stemp1), source, kCommandSource), Webserver->client().remoteIP().toString().c_str());
   }
 }
 
 void ExecuteWebCommand(char* svalue, uint32_t source)
 {
   ShowWebSource(source);
-  last_source = source;
+  TasmotaGlobal.last_source = source;
   ExecuteCommand(svalue, SRC_IGNORE);
+}
+
+// replace the series of `Webserver->on()` with a table in PROGMEM
+typedef struct WebServerDispatch_t {
+  char uri[3];   // the prefix "/" is added automatically
+  uint8_t method;
+  void (*handler)(void);
+} WebServerDispatch_t;
+
+const WebServerDispatch_t WebServerDispatch[] PROGMEM = {
+  { "",   HTTP_ANY, HandleRoot },
+  { "up", HTTP_ANY, HandleUpgradeFirmware },
+  { "u1", HTTP_ANY, HandleUpgradeFirmwareStart },   // OTA
+  { "u2", HTTP_OPTIONS, HandlePreflightRequest },
+  { "u3", HTTP_ANY, HandleUploadDone },
+  { "cs", HTTP_GET, HandleConsole },
+  { "cs", HTTP_OPTIONS, HandlePreflightRequest },
+  { "cm", HTTP_ANY, HandleHttpCommand },
+#ifndef FIRMWARE_MINIMAL
+  { "cn", HTTP_ANY, HandleConfiguration },
+  { "md", HTTP_ANY, HandleModuleConfiguration },
+  { "wi", HTTP_ANY, HandleWifiConfiguration },
+  { "lg", HTTP_ANY, HandleLoggingConfiguration },
+  { "tp", HTTP_ANY, HandleTemplateConfiguration },
+  { "co", HTTP_ANY, HandleOtherConfiguration },
+  { "dl", HTTP_ANY, HandleBackupConfiguration },
+  { "rs", HTTP_ANY, HandleRestoreConfiguration },
+  { "rt", HTTP_ANY, HandleResetConfiguration },
+  { "in", HTTP_ANY, HandleInformation },
+#endif  // Not FIRMWARE_MINIMAL
+};
+
+void WebServer_on(const char * prefix, void (*func)(void), uint8_t method = HTTP_ANY) {
+#ifdef ESP8266
+  Webserver->on((const __FlashStringHelper *) prefix, (HTTPMethod) method, func);
+#endif  // ESP8266
+#ifdef ESP32
+  Webserver->on(prefix, (HTTPMethod) method, func);
+#endif  // ESP32
 }
 
 void StartWebserver(int type, IPAddress ipweb)
@@ -863,27 +898,21 @@ void StartWebserver(int type, IPAddress ipweb)
   if (!Web.state) {
     if (!Webserver) {
       Webserver = new ESP8266WebServer((HTTP_MANAGER == type || HTTP_MANAGER_RESET_ONLY == type) ? 80 : WEB_PORT);
-      Webserver->on("/", HandleRoot);
+      // call `Webserver->on()` on each entry
+      for (uint32_t i=0; i<ARRAY_SIZE(WebServerDispatch); i++) {
+        const WebServerDispatch_t & line = WebServerDispatch[i];
+        // copy uri in RAM and prefix with '/'
+        char uri[4];
+        uri[0] = '/';
+        uri[1] = pgm_read_byte(&line.uri[0]);
+        uri[2] = pgm_read_byte(&line.uri[1]);
+        uri[3] = '\0';
+        // register
+        WebServer_on(uri, line.handler, pgm_read_byte(&line.method));
+      }
       Webserver->onNotFound(HandleNotFound);
-      Webserver->on("/up", HandleUpgradeFirmware);
-      Webserver->on("/u1", HandleUpgradeFirmwareStart);  // OTA
-      Webserver->on("/u2", HTTP_POST, HandleUploadDone, HandleUploadLoop);
-      Webserver->on("/u2", HTTP_OPTIONS, HandlePreflightRequest);
-      Webserver->on("/u3", HandleUploadDone);
-      Webserver->on("/cs", HTTP_GET, HandleConsole);
-      Webserver->on("/cs", HTTP_OPTIONS, HandlePreflightRequest);
-      Webserver->on("/cm", HandleHttpCommand);
+      Webserver->on("/u2", HTTP_POST, HandleUploadDone, HandleUploadLoop);  // this call requires 2 functions so we keep a direct call
 #ifndef FIRMWARE_MINIMAL
-      Webserver->on("/cn", HandleConfiguration);
-      Webserver->on("/md", HandleModuleConfiguration);
-      Webserver->on("/wi", HandleWifiConfiguration);
-      Webserver->on("/lg", HandleLoggingConfiguration);
-      Webserver->on("/tp", HandleTemplateConfiguration);
-      Webserver->on("/co", HandleOtherConfiguration);
-      Webserver->on("/dl", HandleBackupConfiguration);
-      Webserver->on("/rs", HandleRestoreConfiguration);
-      Webserver->on("/rt", HandleResetConfiguration);
-      Webserver->on("/in", HandleInformation);
       XdrvCall(FUNC_WEB_ADD_HANDLER);
       XsnsCall(FUNC_WEB_ADD_HANDLER);
 #endif  // Not FIRMWARE_MINIMAL
@@ -896,17 +925,17 @@ void StartWebserver(int type, IPAddress ipweb)
 #if LWIP_IPV6
     String ipv6_addr = WifiGetIPv6();
     if (ipv6_addr!="") {
-      AddLog_P2(LOG_LEVEL_INFO, PSTR(D_LOG_HTTP D_WEBSERVER_ACTIVE_ON " %s%s " D_WITH_IP_ADDRESS " %s and IPv6 global address %s "),
+      AddLog_P(LOG_LEVEL_INFO, PSTR(D_LOG_HTTP D_WEBSERVER_ACTIVE_ON " %s%s " D_WITH_IP_ADDRESS " %s and IPv6 global address %s "),
         NetworkHostname(), (Mdns.begun) ? ".local" : "", ipweb.toString().c_str(), ipv6_addr.c_str());
     } else {
-      AddLog_P2(LOG_LEVEL_INFO, PSTR(D_LOG_HTTP D_WEBSERVER_ACTIVE_ON " %s%s " D_WITH_IP_ADDRESS " %s"),
+      AddLog_P(LOG_LEVEL_INFO, PSTR(D_LOG_HTTP D_WEBSERVER_ACTIVE_ON " %s%s " D_WITH_IP_ADDRESS " %s"),
         NetworkHostname(), (Mdns.begun) ? ".local" : "", ipweb.toString().c_str());
     }
 #else
-    AddLog_P2(LOG_LEVEL_INFO, PSTR(D_LOG_HTTP D_WEBSERVER_ACTIVE_ON " %s%s " D_WITH_IP_ADDRESS " %s"),
+    AddLog_P(LOG_LEVEL_INFO, PSTR(D_LOG_HTTP D_WEBSERVER_ACTIVE_ON " %s%s " D_WITH_IP_ADDRESS " %s"),
       NetworkHostname(), (Mdns.begun) ? ".local" : "", ipweb.toString().c_str());
 #endif // LWIP_IPV6 = 1
-    rules_flag.http_init = 1;
+    TasmotaGlobal.rules_flag.http_init = 1;
   }
   if (type) { Web.state = type; }
 }
@@ -923,7 +952,7 @@ void StopWebserver(void)
 void WifiManagerBegin(bool reset_only)
 {
   // setup AP
-  if (!global_state.wifi_down) {
+  if (!TasmotaGlobal.global_state.wifi_down) {
 //    WiFi.mode(WIFI_AP_STA);
     WifiSetMode(WIFI_AP_STA);
     AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_WIFI D_WIFIMANAGER_SET_ACCESSPOINT_AND_STATION));
@@ -941,7 +970,7 @@ void WifiManagerBegin(bool reset_only)
   if ((channel < 1) || (channel > 13)) { channel = 1; }
 
   // bool softAP(const char* ssid, const char* passphrase = NULL, int channel = 1, int ssid_hidden = 0, int max_connection = 4);
-  WiFi.softAP(my_hostname, WIFI_AP_PASSPHRASE, channel, 0, 1);
+  WiFi.softAP(TasmotaGlobal.hostname, WIFI_AP_PASSPHRASE, channel, 0, 1);
   delay(500); // Without delay I've seen the IP address blank
   /* Setup the DNS server redirecting all the domains to the apIP */
   DnsServer->setErrorReplyCode(DNSReplyCode::NoError);
@@ -1026,7 +1055,7 @@ void _WSContentSend(const String& content)        // Low level sendContent for a
 #ifdef USE_DEBUG_DRIVER
   ShowFreeMem(PSTR("WSContentSend"));
 #endif
-  DEBUG_CORE_LOG(PSTR("WEB: Chunk size %d/%d"), len, sizeof(mqtt_data));
+  DEBUG_CORE_LOG(PSTR("WEB: Chunk size %d/%d"), len, sizeof(TasmotaGlobal.mqtt_data));
 }
 
 void WSContentFlush(void)
@@ -1039,24 +1068,24 @@ void WSContentFlush(void)
 
 void _WSContentSendBuffer(void)
 {
-  int len = strlen(mqtt_data);
+  int len = strlen(TasmotaGlobal.mqtt_data);
 
   if (0 == len) {                                  // No content
     return;
   }
-  else if (len == sizeof(mqtt_data)) {
+  else if (len == sizeof(TasmotaGlobal.mqtt_data)) {
     AddLog_P(LOG_LEVEL_INFO, PSTR("HTP: Content too large"));
   }
   else if (len < CHUNKED_BUFFER_SIZE) {            // Append chunk buffer with small content
-    Web.chunk_buffer += mqtt_data;
+    Web.chunk_buffer += TasmotaGlobal.mqtt_data;
     len = Web.chunk_buffer.length();
   }
 
   if (len >= CHUNKED_BUFFER_SIZE) {                // Either content or chunk buffer is oversize
     WSContentFlush();                              // Send chunk buffer before possible content oversize
   }
-  if (strlen(mqtt_data) >= CHUNKED_BUFFER_SIZE) {  // Content is oversize
-    _WSContentSend(mqtt_data);                     // Send content
+  if (strlen(TasmotaGlobal.mqtt_data) >= CHUNKED_BUFFER_SIZE) {  // Content is oversize
+    _WSContentSend(TasmotaGlobal.mqtt_data);                     // Send content
   }
 }
 
@@ -1065,13 +1094,13 @@ void WSContentSend_P(const char* formatP, ...)     // Content send snprintf_P ch
   // This uses char strings. Be aware of sending %% if % is needed
   va_list arg;
   va_start(arg, formatP);
-  int len = vsnprintf_P(mqtt_data, sizeof(mqtt_data), formatP, arg);
+  int len = vsnprintf_P(TasmotaGlobal.mqtt_data, sizeof(TasmotaGlobal.mqtt_data), formatP, arg);
   va_end(arg);
 
 #ifdef DEBUG_TASMOTA_CORE
-  if (len > (sizeof(mqtt_data) -1)) {
-    mqtt_data[33] = '\0';
-    DEBUG_CORE_LOG(PSTR("ERROR: WSContentSend_P size %d > mqtt_data size %d. Start of data [%s...]"), len, sizeof(mqtt_data), mqtt_data);
+  if (len > (sizeof(TasmotaGlobal.mqtt_data) -1)) {
+    TasmotaGlobal.mqtt_data[33] = '\0';
+    DEBUG_CORE_LOG(PSTR("ERROR: WSContentSend_P size %d > mqtt_data size %d. Start of data [%s...]"), len, sizeof(TasmotaGlobal.mqtt_data), TasmotaGlobal.mqtt_data);
   }
 #endif
 
@@ -1083,20 +1112,20 @@ void WSContentSend_PD(const char* formatP, ...)    // Content send snprintf_P ch
   // This uses char strings. Be aware of sending %% if % is needed
   va_list arg;
   va_start(arg, formatP);
-  int len = vsnprintf_P(mqtt_data, sizeof(mqtt_data), formatP, arg);
+  int len = vsnprintf_P(TasmotaGlobal.mqtt_data, sizeof(TasmotaGlobal.mqtt_data), formatP, arg);
   va_end(arg);
 
 #ifdef DEBUG_TASMOTA_CORE
-  if (len > (sizeof(mqtt_data) -1)) {
-    mqtt_data[33] = '\0';
-    DEBUG_CORE_LOG(PSTR("ERROR: WSContentSend_PD size %d > mqtt_data size %d. Start of data [%s...]"), len, sizeof(mqtt_data), mqtt_data);
+  if (len > (sizeof(TasmotaGlobal.mqtt_data) -1)) {
+    TasmotaGlobal.mqtt_data[33] = '\0';
+    DEBUG_CORE_LOG(PSTR("ERROR: WSContentSend_PD size %d > mqtt_data size %d. Start of data [%s...]"), len, sizeof(TasmotaGlobal.mqtt_data), TasmotaGlobal.mqtt_data);
   }
 #endif
 
   if (D_DECIMAL_SEPARATOR[0] != '.') {
     for (uint32_t i = 0; i < len; i++) {
-      if ('.' == mqtt_data[i]) {
-        mqtt_data[i] = D_DECIMAL_SEPARATOR[0];
+      if ('.' == TasmotaGlobal.mqtt_data[i]) {
+        TasmotaGlobal.mqtt_data[i] = D_DECIMAL_SEPARATOR[0];
       }
     }
   }
@@ -1147,13 +1176,13 @@ void WSContentSendStyle_P(const char* formatP, ...)
     // This uses char strings. Be aware of sending %% if % is needed
     va_list arg;
     va_start(arg, formatP);
-    int len = vsnprintf_P(mqtt_data, sizeof(mqtt_data), formatP, arg);
+    int len = vsnprintf_P(TasmotaGlobal.mqtt_data, sizeof(TasmotaGlobal.mqtt_data), formatP, arg);
     va_end(arg);
 
 #ifdef DEBUG_TASMOTA_CORE
-  if (len > (sizeof(mqtt_data) -1)) {
-    mqtt_data[33] = '\0';
-    DEBUG_CORE_LOG(PSTR("ERROR: WSContentSendStyle_P size %d > mqtt_data size %d. Start of data [%s...]"), len, sizeof(mqtt_data), mqtt_data);
+  if (len > (sizeof(TasmotaGlobal.mqtt_data) -1)) {
+    TasmotaGlobal.mqtt_data[33] = '\0';
+    DEBUG_CORE_LOG(PSTR("ERROR: WSContentSendStyle_P size %d > mqtt_data size %d. Start of data [%s...]"), len, sizeof(TasmotaGlobal.mqtt_data), TasmotaGlobal.mqtt_data);
   }
 #endif
 
@@ -1233,7 +1262,7 @@ void WSContentStop(void)
       WSContentSend_P(HTTP_COUNTER);
     }
   }
-  WSContentSend_P(HTTP_END, my_version);
+  WSContentSend_P(HTTP_END, TasmotaGlobal.version);
   WSContentEnd();
 }
 
@@ -1244,11 +1273,11 @@ void WebRestart(uint32_t type)
   // type 0 = restart
   // type 1 = restart after config change
   // type 2 = restart after config change with possible ip address change too
-  AddLog_P(LOG_LEVEL_DEBUG, S_LOG_HTTP, S_RESTART);
+  AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP D_RESTART));
 
   bool reset_only = (HTTP_MANAGER_RESET_ONLY == Web.state);
 
-  WSContentStart_P((type) ? S_SAVE_CONFIGURATION : S_RESTART, !reset_only);
+  WSContentStart_P((type) ? PSTR(D_SAVE_CONFIGURATION) : PSTR(D_RESTART), !reset_only);
   WSContentSend_P(HTTP_SCRIPT_RELOAD_TIME, HTTP_RESTART_RECONNECT_TIME);
   WSContentSendStyle();
   if (type) {
@@ -1267,14 +1296,14 @@ void WebRestart(uint32_t type)
   WSContentStop();
 
   ShowWebSource(SRC_WEBGUI);
-  restart_flag = 2;
+  TasmotaGlobal.restart_flag = 2;
 }
 
 /*********************************************************************************************/
 
 void HandleWifiLogin(void)
 {
-  WSContentStart_P(S_CONFIGURE_WIFI, false);  // false means show page no matter if the client has or has not credentials
+  WSContentStart_P(PSTR(D_CONFIGURE_WIFI), false);  // false means show page no matter if the client has or has not credentials
   WSContentSendStyle();
   WSContentSend_P(HTTP_FORM_LOGIN);
 
@@ -1330,11 +1359,11 @@ void HandleRoot(void)
     return;
   }
 
-  AddLog_P(LOG_LEVEL_DEBUG, S_LOG_HTTP, S_MAIN_MENU);
+  AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP D_MAIN_MENU));
 
   char stemp[33];
 
-  WSContentStart_P(S_MAIN_MENU);
+  WSContentStart_P(PSTR(D_MAIN_MENU));
 #ifdef USE_SCRIPT_WEB_DISPLAY
   WSContentSend_P(HTTP_SCRIPT_ROOT, Settings.web_refresh, Settings.web_refresh);
 #else
@@ -1345,12 +1374,12 @@ void HandleRoot(void)
   WSContentSendStyle();
 
   WSContentSend_P(PSTR("<div id='l1' name='l1'></div>"));
-  if (devices_present) {
+  if (TasmotaGlobal.devices_present) {
 #ifdef USE_LIGHT
-    if (light_type) {
-      uint8_t light_subtype = light_type &7;
+    if (TasmotaGlobal.light_type) {
+      uint8_t light_subtype = TasmotaGlobal.light_type &7;
       if (!Settings.flag3.pwm_multi_channels) {  // SetOption68 0 - Enable multi-channels PWM instead of Color PWM
-        bool split_white = ((LST_RGBW <= light_subtype) && (devices_present > 1));  // Only on RGBW or RGBCW and SetOption37 128
+        bool split_white = ((LST_RGBW <= light_subtype) && (TasmotaGlobal.devices_present > 1));  // Only on RGBW or RGBCW and SetOption37 128
 
         if ((LST_COLDWARM == light_subtype) || ((LST_RGBCW == light_subtype) && !split_white)) {
           WebSliderColdWarm();
@@ -1424,7 +1453,7 @@ void HandleRoot(void)
 #endif // USE_LIGHT
 #ifdef USE_SHUTTER
     if (Settings.flag3.shutter_mode) {  // SetOption80 - Enable shutter support
-      for (uint32_t i = 0; i < shutters_present; i++) {
+      for (uint32_t i = 0; i < TasmotaGlobal.shutters_present; i++) {
         WSContentSend_P(HTTP_MSG_SLIDER_SHUTTER, Settings.shutter_position[i], i+1);
       }
     }
@@ -1444,21 +1473,21 @@ void HandleRoot(void)
       }
     } else {
 #endif  // USE_SONOFF_IFAN
-      for (uint32_t idx = 1; idx <= devices_present; idx++) {
+      for (uint32_t idx = 1; idx <= TasmotaGlobal.devices_present; idx++) {
         bool set_button = ((idx <= MAX_BUTTON_TEXT) && strlen(SettingsText(SET_BUTTON1 + idx -1)));
 #ifdef USE_SHUTTER
         int32_t ShutterWebButton;
         if (ShutterWebButton = IsShutterWebButton(idx)) {
-          WSContentSend_P(HTTP_DEVICE_CONTROL, 100 / devices_present, idx,
+          WSContentSend_P(HTTP_DEVICE_CONTROL, 100 / TasmotaGlobal.devices_present, idx,
             (set_button) ? SettingsText(SET_BUTTON1 + idx -1) : ((Settings.shutter_options[abs(ShutterWebButton)-1] & 2) /* is locked */ ? "-" : ((Settings.shutter_options[abs(ShutterWebButton)-1] & 8) /* invert web buttons */ ? ((ShutterWebButton>0) ? "&#9660;" : "&#9650;") : ((ShutterWebButton>0) ? "&#9650;" : "&#9660;"))),
             "");
           continue;
         }
 #endif  // USE_SHUTTER
         snprintf_P(stemp, sizeof(stemp), PSTR(" %d"), idx);
-        WSContentSend_P(HTTP_DEVICE_CONTROL, 100 / devices_present, idx,
-          (set_button) ? SettingsText(SET_BUTTON1 + idx -1) : (devices_present < 5) ? D_BUTTON_TOGGLE : "",
-          (set_button) ? "" : (devices_present > 1) ? stemp : "");
+        WSContentSend_P(HTTP_DEVICE_CONTROL, 100 / TasmotaGlobal.devices_present, idx,
+          (set_button) ? SettingsText(SET_BUTTON1 + idx -1) : (TasmotaGlobal.devices_present < 5) ? D_BUTTON_TOGGLE : "",
+          (set_button) ? "" : (TasmotaGlobal.devices_present > 1) ? stemp : "");
       }
 #ifdef USE_SONOFF_IFAN
     }
@@ -1467,31 +1496,18 @@ void HandleRoot(void)
   }
 #ifdef USE_TUYA_MCU
   if (IsModuleTuya()) {
-    uint8_t modeset = 0;
     if (AsModuleTuyaMS()) {
       WSContentSend_P(HTTP_TABLE100);
       WSContentSend_P(PSTR("<tr><div></div>"));
       snprintf_P(stemp, sizeof(stemp), PSTR("" D_JSON_IRHVAC_MODE ""));
-      WSContentSend_P(HTTP_DEVICE_CONTROL, 26, devices_present + 1,
-        (strlen(SettingsText(SET_BUTTON1 + devices_present))) ? SettingsText(SET_BUTTON1 + devices_present) : stemp, "");
-      WSContentSend_P(PSTR("</tr></table>"));
-      modeset = 1;
-    }
-    if (IsTuyaFanCtrl()) {
-      uint8_t device = devices_present + modeset;
-      WSContentSend_P(HTTP_TABLE100);
-      WSContentSend_P(PSTR("<tr><div></div>"));
-      for (uint32_t i = device + 1; i <= (TuyaFanSpeeds() + device) + 1; i++) {
-        snprintf_P(stemp, sizeof(stemp), PSTR("%d"), i - (device + 1));
-        WSContentSend_P(HTTP_DEVICE_CONTROL, 16, i,
-          (strlen(SettingsText(SET_BUTTON1 + i))) ? SettingsText(SET_BUTTON1 + i) : stemp, "");
-      }
+      WSContentSend_P(HTTP_DEVICE_CONTROL, 26, TasmotaGlobal.devices_present + 1,
+        (strlen(SettingsText(SET_BUTTON1 + TasmotaGlobal.devices_present))) ? SettingsText(SET_BUTTON1 + TasmotaGlobal.devices_present) : stemp, "");
       WSContentSend_P(PSTR("</tr></table>"));
     }
   }
 #endif  // USE_TUYA_MCU
 #ifdef USE_SONOFF_RF
-  if (SONOFF_BRIDGE == my_module_type) {
+  if (SONOFF_BRIDGE == TasmotaGlobal.module_type) {
     WSContentSend_P(HTTP_TABLE100);
     WSContentSend_P(PSTR("<tr>"));
     uint32_t idx = 0;
@@ -1562,29 +1578,15 @@ bool HandleRootStatusRefresh(void)
 #endif  // USE_SONOFF_IFAN
 #ifdef USE_TUYA_MCU
     if (IsModuleTuya()) {
-      uint8_t FuncIdx = 0;
-        if (device <= devices_present) {
-          ExecuteCommandPower(device, POWER_TOGGLE, SRC_IGNORE);
-        } else {
-          if (AsModuleTuyaMS() && device == devices_present + 1) {
-            uint8_t dpId = TuyaGetDpId(TUYA_MCU_FUNC_MODESET);
-            snprintf_P(svalue, sizeof(svalue), PSTR("Tuyasend4 %d,%d"), dpId, !TuyaModeSet());
-            ExecuteCommand(svalue, SRC_WEBGUI);
-          }
-          if (IsTuyaFanCtrl()) {
-            uint8_t dpId = 0;
-            for (uint32_t i = 0; i <= 3; i++) { // Tuya Function FAN3 to FAN6
-              if (TuyaGetDpId(TUYA_MCU_FUNC_FAN3 + i) != 0) {
-                dpId = TuyaGetDpId(TUYA_MCU_FUNC_FAN3 + i);
-              }
-            }
-            if ((AsModuleTuyaMS() && device != devices_present + 1) || !AsModuleTuyaMS()) {
-              if (AsModuleTuyaMS()) {FuncIdx = 1;}
-              snprintf_P(svalue, sizeof(svalue), PSTR("Tuyasend2 %d,%d"), dpId, (device - (devices_present + FuncIdx) - 1));
-              ExecuteCommand(svalue, SRC_WEBGUI);
-            }
-          }
+      if (device <= TasmotaGlobal.devices_present) {
+        ExecuteCommandPower(device, POWER_TOGGLE, SRC_IGNORE);
+      } else {
+        if (AsModuleTuyaMS() && device == TasmotaGlobal.devices_present + 1) {
+          uint8_t dpId = TuyaGetDpId(TUYA_MCU_FUNC_MODESET);
+          snprintf_P(svalue, sizeof(svalue), PSTR("Tuyasend4 %d,%d"), dpId, !TuyaModeSet());
+          ExecuteCommand(svalue, SRC_WEBGUI);
         }
+      }
     } else {
 #endif  // USE_TUYA_MCU
 #ifdef USE_SHUTTER
@@ -1617,7 +1619,7 @@ bool HandleRootStatusRefresh(void)
     ExecuteWebCommand(svalue, SRC_WEBGUI);
   }
   uint32_t light_device = LightDevice();  // Channel number offset
-  uint32_t pwm_channels = (light_type & 7) > LST_MAX ? LST_MAX : (light_type & 7);
+  uint32_t pwm_channels = (TasmotaGlobal.light_type & 7) > LST_MAX ? LST_MAX : (TasmotaGlobal.light_type & 7);
   for (uint32_t j = 0; j < pwm_channels; j++) {
     snprintf_P(webindex, sizeof(webindex), PSTR("e%d"), j +1);
     WebGetArg(webindex, tmp, sizeof(tmp));  // 0 - 100 percent
@@ -1643,7 +1645,7 @@ bool HandleRootStatusRefresh(void)
   }
 #endif  // USE_LIGHT
 #ifdef USE_SHUTTER
-  for (uint32_t j = 1; j <= shutters_present; j++) {
+  for (uint32_t j = 1; j <= TasmotaGlobal.shutters_present; j++) {
     snprintf_P(webindex, sizeof(webindex), PSTR("u%d"), j);
     WebGetArg(webindex, tmp, sizeof(tmp));  // 0 - 100 percent
     if (strlen(tmp)) {
@@ -1659,6 +1661,18 @@ bool HandleRootStatusRefresh(void)
     ExecuteWebCommand(svalue, SRC_WEBGUI);
   }
 #endif  // USE_SONOFF_RF
+#ifdef USE_ZIGBEE
+  WebGetArg("zbj", tmp, sizeof(tmp));
+  if (strlen(tmp)) {
+    snprintf_P(svalue, sizeof(svalue), PSTR("ZbPermitJoin"));
+    ExecuteWebCommand(svalue, SRC_WEBGUI);
+  }
+  WebGetArg("zbr", tmp, sizeof(tmp));
+  if (strlen(tmp)) {
+    snprintf_P(svalue, sizeof(svalue), PSTR("ZbMap"));
+    ExecuteWebCommand(svalue, SRC_WEBGUI);
+  }
+#endif // USE_ZIGBEE
   WSContentBegin(200, CT_HTML);
   WSContentSend_P(PSTR("{t}"));
   XsnsCall(FUNC_WEB_SENSOR);
@@ -1666,20 +1680,20 @@ bool HandleRootStatusRefresh(void)
 
   WSContentSend_P(PSTR("</table>"));
 
-  if (devices_present) {
+  if (TasmotaGlobal.devices_present) {
     WSContentSend_P(PSTR("{t}<tr>"));
-    uint32_t fsize = (devices_present < 5) ? 70 - (devices_present * 8) : 32;
+    uint32_t fsize = (TasmotaGlobal.devices_present < 5) ? 70 - (TasmotaGlobal.devices_present * 8) : 32;
 #ifdef USE_SONOFF_IFAN
     if (IsModuleIfan()) {
-      WSContentSend_P(HTTP_DEVICE_STATE, 36, (bitRead(power, 0)) ? "bold" : "normal", 54, GetStateText(bitRead(power, 0)));
+      WSContentSend_P(HTTP_DEVICE_STATE, 36, (bitRead(TasmotaGlobal.power, 0)) ? "bold" : "normal", 54, GetStateText(bitRead(TasmotaGlobal.power, 0)));
       uint32_t fanspeed = GetFanspeed();
       snprintf_P(svalue, sizeof(svalue), PSTR("%d"), fanspeed);
       WSContentSend_P(HTTP_DEVICE_STATE, 64, (fanspeed) ? "bold" : "normal", 54, (fanspeed) ? svalue : GetStateText(0));
     } else {
 #endif  // USE_SONOFF_IFAN
-      for (uint32_t idx = 1; idx <= devices_present; idx++) {
-        snprintf_P(svalue, sizeof(svalue), PSTR("%d"), bitRead(power, idx -1));
-        WSContentSend_P(HTTP_DEVICE_STATE, 100 / devices_present, (bitRead(power, idx -1)) ? "bold" : "normal", fsize, (devices_present < 5) ? GetStateText(bitRead(power, idx -1)) : svalue);
+      for (uint32_t idx = 1; idx <= TasmotaGlobal.devices_present; idx++) {
+        snprintf_P(svalue, sizeof(svalue), PSTR("%d"), bitRead(TasmotaGlobal.power, idx -1));
+        WSContentSend_P(HTTP_DEVICE_STATE, 100 / TasmotaGlobal.devices_present, (bitRead(TasmotaGlobal.power, idx -1)) ? "bold" : "normal", fsize, (TasmotaGlobal.devices_present < 5) ? GetStateText(bitRead(TasmotaGlobal.power, idx -1)) : svalue);
       }
 #ifdef USE_SONOFF_IFAN
     }
@@ -1689,14 +1703,9 @@ bool HandleRootStatusRefresh(void)
   }
 #ifdef USE_TUYA_MCU
   if (IsModuleTuya()) {
-    uint32_t fanspeed = TuyaFanState();
     uint32_t modeset = TuyaModeSet();
-    if (IsTuyaFanCtrl() && !AsModuleTuyaMS()) {
-      WSContentSend_P(PSTR("<div style='text-align:center;font-size:25px;'>" D_JSON_IRHVAC_FANSPEED ": %d</div>"), fanspeed);
-    } else if (!IsTuyaFanCtrl() && AsModuleTuyaMS()) {
+    if (AsModuleTuyaMS()) {
       WSContentSend_P(PSTR("<div style='text-align:center;font-size:25px;'>" D_JSON_IRHVAC_MODE ": %d</div>"), modeset);
-    } else if (IsTuyaFanCtrl() && AsModuleTuyaMS()) {
-      WSContentSend_P(PSTR("<div style='text-align:center;font-size:25px;'>" D_JSON_IRHVAC_MODE ": %d - " D_JSON_IRHVAC_FANSPEED ": %d</div>"), modeset, fanspeed);
     }
   }
 #endif  // USE_TUYA_MCU
@@ -1729,9 +1738,9 @@ void HandleConfiguration(void)
 {
   if (!HttpCheckPriviledgedAccess()) { return; }
 
-  AddLog_P(LOG_LEVEL_DEBUG, S_LOG_HTTP, S_CONFIGURATION);
+  AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP D_CONFIGURATION));
 
-  WSContentStart_P(S_CONFIGURATION);
+  WSContentStart_P(PSTR(D_CONFIGURATION));
   WSContentSendStyle();
 
   WSContentButton(BUTTON_MODULE);
@@ -1754,6 +1763,63 @@ void HandleConfiguration(void)
 
 /*-------------------------------------------------------------------------------------------*/
 
+void WSContentSendNiceLists(uint32_t option) {
+  char stemp[30];                                             // Template number and Sensor name
+  for (uint32_t i = 0; i < ARRAY_SIZE(kGpioNiceList); i++) {  // GPIO: }2'0'>None (0)}3}2'17'>Button1 (17)}3...
+    if (option && (1 == i)) {
+      WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE_NO_INDEX, AGPIO(GPIO_USER), D_SENSOR_USER);  // }2'255'>User}3
+    }
+    uint32_t ridx = pgm_read_word(kGpioNiceList + i) & 0xFFE0;
+    uint32_t midx = BGPIO(ridx);
+    WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE_NO_INDEX, ridx, GetTextIndexed(stemp, sizeof(stemp), midx, kSensorNames));
+  }
+  WSContentSend_P(PSTR("\";"));
+
+  WSContentSend_P(PSTR("hs=["));
+  uint32_t midx;
+  bool first_done = false;
+  for (uint32_t i = 0; i < ARRAY_SIZE(kGpioNiceList); i++) {  // hs=[36,68,100,132,168,200,232,264,292,324,356,388,421,453];
+    midx = pgm_read_word(kGpioNiceList + i);
+    if (midx & 0x001F) {
+      if (first_done) { WSContentSend_P(PSTR(",")); }
+      WSContentSend_P(PSTR("%d"), midx);
+      first_done = true;
+    }
+  }
+#ifdef ESP8266
+#ifdef USE_ADC
+  for (uint32_t i = 0; i < ARRAY_SIZE(kAdcNiceList); i++) {   // hs=[36,68,100,132,168,200,232,264,292,324,356,388,421,453];
+    midx = pgm_read_word(kAdcNiceList + i);
+    if (midx & 0x001F) {
+      if (first_done) { WSContentSend_P(PSTR(",")); }
+      WSContentSend_P(PSTR("%d"), midx);
+      first_done = true;
+    }
+  }
+#endif  // USE_ADC
+#endif  // ESP8266
+  WSContentSend_P(PSTR("];"));
+}
+
+#ifdef ESP8266
+#ifdef USE_ADC
+void WSContentSendAdcNiceList(uint32_t option) {
+  char stemp[30];                                             // Template number and Sensor name
+  WSContentSend_P(PSTR("os=\""));
+  for (uint32_t i = 0; i < ARRAY_SIZE(kAdcNiceList); i++) {   // GPIO: }2'0'>None}3}2'17'>Analog}3...
+    if (option && (1 == i)) {
+      WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE_NO_INDEX, AGPIO(GPIO_USER), D_SENSOR_USER);  // }2'15'>User}3
+    }
+    uint32_t ridx = pgm_read_word(kAdcNiceList + i) & 0xFFE0;
+    uint32_t midx = BGPIO(ridx);
+    WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE_NO_INDEX, ridx, GetTextIndexed(stemp, sizeof(stemp), midx, kSensorNames));
+  }
+}
+#endif  // USE_ADC
+#endif  // ESP8266
+
+/*-------------------------------------------------------------------------------------------*/
+
 void HandleTemplateConfiguration(void)
 {
   if (!HttpCheckPriviledgedAccess()) { return; }
@@ -1771,16 +1837,16 @@ void HandleTemplateConfiguration(void)
     uint32_t module = atoi(stemp);
     uint32_t module_save = Settings.module;
     Settings.module = module;
-    myio cmodule;
-    ModuleGpios(&cmodule);
+    myio template_gp;
+    TemplateGpios(&template_gp);
     gpio_flag flag = ModuleFlag();
     Settings.module = module_save;
 
     WSContentBegin(200, CT_PLAIN);
     WSContentSend_P(PSTR("%s}1"), AnyModuleName(module).c_str());  // NAME: Generic
-    for (uint32_t i = 0; i < ARRAY_SIZE(cmodule.io); i++) {        // 17,148,29,149,7,255,255,255,138,255,139,255,255
+    for (uint32_t i = 0; i < ARRAY_SIZE(template_gp.io); i++) {        // 17,148,29,149,7,255,255,255,138,255,139,255,255
       if (!FlashPin(i)) {
-        WSContentSend_P(PSTR("%s%d"), (i>0)?",":"", cmodule.io[i]);
+        WSContentSend_P(PSTR("%s%d"), (i>0)?",":"", template_gp.io[i]);
       }
     }
     WSContentSend_P(PSTR("}1%d}1%d"), flag, Settings.user_template_base);  // FLAG: 1  BASE: 17
@@ -1788,66 +1854,28 @@ void HandleTemplateConfiguration(void)
     return;
   }
 
-  AddLog_P(LOG_LEVEL_DEBUG, S_LOG_HTTP, S_CONFIGURE_TEMPLATE);
+  AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP D_CONFIGURE_TEMPLATE));
 
-  WSContentStart_P(S_CONFIGURE_TEMPLATE);
+  WSContentStart_P(PSTR(D_CONFIGURE_TEMPLATE));
   WSContentSend_P(HTTP_SCRIPT_MODULE_TEMPLATE);
 
   WSContentSend_P(HTTP_SCRIPT_TEMPLATE);
-  for (uint32_t i = 0; i < ARRAY_SIZE(kGpioNiceList); i++) {   // GPIO: }2'0'>None (0)}3}2'17'>Button1 (17)}3...
-#ifdef ESP8266
-    if (1 == i) {
-      WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE, AGPIO(GPIO_USER), D_SENSOR_USER, AGPIO(GPIO_USER));  // }2'255'>User (255)}3
-    }
-    uint32_t midx = pgm_read_byte(kGpioNiceList + i);
-    uint32_t ridx = midx;
-    WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE, ridx, GetTextIndexed(stemp, sizeof(stemp), midx, kSensorNames), ridx);
-#else  // ESP32
-    if (1 == i) {
-      WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE_NO_INDEX, AGPIO(GPIO_USER), D_SENSOR_USER);  // }2'255'>User}3
-    }
-    uint32_t ridx = pgm_read_word(kGpioNiceList + i) & 0xFFE0;
-    uint32_t midx = BGPIO(ridx);
-    WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE_NO_INDEX, ridx, GetTextIndexed(stemp, sizeof(stemp), midx, kSensorNames));
-#endif  // ESP8266 - ESP32
-  }
-  WSContentSend_P(PSTR("\";"));
 
-#ifdef ESP32
-  WSContentSend_P(PSTR("hs=["));
-  bool first_done = false;
-  for (uint32_t i = 0; i < ARRAY_SIZE(kGpioNiceList); i++) {  // hs=[36,68,100,132,168,200,232,264,292,324,356,388,421,453];
-    uint32_t midx = pgm_read_word(kGpioNiceList + i);
-    if (midx & 0x001F) {
-      if (first_done) { WSContentSend_P(PSTR(",")); }
-      WSContentSend_P(PSTR("%d"), midx);
-      first_done = true;
-    }
-  }
-  WSContentSend_P(PSTR("];"));
-#endif  // ESP32
+  WSContentSendNiceLists(1);
 
   WSContentSend_P(HTTP_SCRIPT_TEMPLATE2);
 
 #ifdef ESP8266
-  WSContentSend_P(PSTR("os=\""));
-  for (uint32_t i = 0; i < ADC0_END; i++) {                // FLAG: }2'0'>None (0)}3}2'17'>Analog (17)}3...
-    if (1 == i) {
-      WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE, ADC0_USER, D_SENSOR_USER, ADC0_USER);  // }2'15'>User (15)}3
-    }
-    WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE, i, GetTextIndexed(stemp, sizeof(stemp), i, kAdc0Names), i);
-  }
+#ifdef USE_ADC
+  WSContentSendAdcNiceList(1);
   WSContentSend_P(HTTP_SCRIPT_TEMPLATE3);
+#endif  // USE_ADC
 #endif  // ESP8266
 
   WSContentSend_P(HTTP_SCRIPT_TEMPLATE4);
   for (uint32_t i = 0; i < sizeof(kModuleNiceList); i++) {  // "}2'%d'>%s (%d)}3" - "}2'0'>Sonoff Basic (1)}3"
     uint32_t midx = pgm_read_byte(kModuleNiceList + i);
-#ifdef ESP8266
-    WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE, midx, AnyModuleName(midx).c_str(), midx +1);
-#else  // ESP32
     WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE_INDEX, midx, AnyModuleName(midx).c_str(), midx +1);
-#endif  // ESP8266 - ESP32
   }
   WSContentSend_P(HTTP_SCRIPT_TEMPLATE5);
 
@@ -1861,27 +1889,15 @@ void HandleTemplateConfiguration(void)
   WSContentSend_P(HTTP_TABLE100);
   for (uint32_t i = 0; i < MAX_GPIO_PIN; i++) {
     if (!FlashPin(i)) {
-#ifdef ESP8266
-      WSContentSend_P(PSTR("<tr><td><b><font color='#%06x'>" D_GPIO "%d</font></b></td><td%s><select id='g%d'></select></td></tr>"),
-        ((9==i)||(10==i)) ? WebColor(COL_TEXT_WARNING) : WebColor(COL_TEXT), i, (0==i) ? " style='width:200px'" : "", i);
-#else  // ESP32
       WSContentSend_P(PSTR("<tr><td><b><font color='#%06x'>" D_GPIO "%d</font></b></td><td%s><select id='g%d' onchange='ot(%d,this.value)'></select></td>"),
         ((9==i)||(10==i)) ? WebColor(COL_TEXT_WARNING) : WebColor(COL_TEXT), i, (0==i) ? " style='width:150px'" : "", i, i);
       WSContentSend_P(PSTR("<td style='width:50px'><select id='h%d'></select></td></tr>"), i);
-#endif  // ESP8266
     }
   }
-#ifdef ESP8266
-  WSContentSend_P(PSTR("<tr><td><b><font color='#%06x'>" D_ADC "0</font></b></td><td><select id='g17'></select></td></tr>"), WebColor(COL_TEXT));
-#endif
   WSContentSend_P(PSTR("</table>"));
 
   gpio_flag flag = ModuleFlag();
-#ifdef ESP8266
-  if (flag.data > ADC0_USER) {
-#else  // ESP32
   if (flag.data) {
-#endif  // ESP32
     WSContentSend_P(HTTP_FORM_TEMPLATE_FLAG);
   }
 
@@ -1890,10 +1906,24 @@ void HandleTemplateConfiguration(void)
   WSContentStop();
 }
 
+uint16_t WebGetGpioArg(uint32_t i) {
+  char webindex[5];                                         // WebGetArg name
+  snprintf_P(webindex, sizeof(webindex), PSTR("g%d"), i);
+  char tmp[8];                                              // WebGetArg numbers only
+  WebGetArg(webindex, tmp, sizeof(tmp));                    // GPIO
+  uint32_t gpio = (!strlen(tmp)) ? 0 : atoi(tmp);
+  char webindex2[5];                                        // WebGetArg name
+  snprintf_P(webindex2, sizeof(webindex2), PSTR("h%d"), i);
+  char tmp2[8];                                             // WebGetArg numbers only
+  WebGetArg(webindex2, tmp2, sizeof(tmp2));
+  uint32_t value2 = (!strlen(tmp2)) ? 0 : atoi(tmp2) -1;
+  gpio += value2;
+  return gpio;
+}
+
 void TemplateSaveSettings(void)
 {
   char tmp[TOPSZ];                                          // WebGetArg NAME and GPIO/BASE/FLAG byte value
-  char webindex[5];                                         // WebGetArg name
   char svalue[300];                                         // Template command string
 
   WebGetArg("s1", tmp, sizeof(tmp));                        // NAME
@@ -1903,30 +1933,15 @@ void TemplateSaveSettings(void)
   for (uint32_t i = 0; i < ARRAY_SIZE(Settings.user_template.gp.io); i++) {
     if (6 == i) { j = 9; }
     if (8 == i) { j = 12; }
-    snprintf_P(webindex, sizeof(webindex), PSTR("g%d"), j);
-    WebGetArg(webindex, tmp, sizeof(tmp));                  // GPIO
-    uint32_t gpio = atoi(tmp);
-#ifdef ESP32
-    char tmp2[8];         // WebGetArg numbers only
-    char webindex2[5];    // WebGetArg name
-    snprintf_P(webindex2, sizeof(webindex2), PSTR("h%d"), j);
-    WebGetArg(webindex2, tmp2, sizeof(tmp2));
-    uint32_t value2 = (!strlen(tmp2)) ? 0 : atoi(tmp2) -1;
-    gpio += value2;
-#endif  // ESP32
-    snprintf_P(svalue, sizeof(svalue), PSTR("%s%s%d"), svalue, (i>0)?",":"", gpio);
+    snprintf_P(svalue, sizeof(svalue), PSTR("%s%s%d"), svalue, (i>0)?",":"", WebGetGpioArg(j));
     j++;
   }
 
-#ifdef ESP8266
-  WebGetArg("g" STR(ADC0_PIN), tmp, sizeof(tmp));           // FLAG - ADC0
-  uint32_t flag = atoi(tmp);
-#else  // ESP32
   uint32_t flag = 0;
-#endif  // ESP32
+  char webindex[5];                                         // WebGetArg name
   for (uint32_t i = 0; i < GPIO_FLAG_USED; i++) {
     snprintf_P(webindex, sizeof(webindex), PSTR("c%d"), i);
-    uint32_t state = Webserver->hasArg(webindex) << i +4;   // FLAG
+    uint32_t state = Webserver->hasArg(webindex) << i;      // FLAG
     flag += state;
   }
   WebGetArg("g99", tmp, sizeof(tmp));                       // BASE
@@ -1948,14 +1963,14 @@ void HandleModuleConfiguration(void)
     return;
   }
 
-  AddLog_P(LOG_LEVEL_DEBUG, S_LOG_HTTP, S_CONFIGURE_MODULE);
+  AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP D_CONFIGURE_MODULE));
 
   char stemp[30];  // Sensor name
   uint32_t midx;
-  myio cmodule;
-  ModuleGpios(&cmodule);
+  myio template_gp;
+  TemplateGpios(&template_gp);
 
-  WSContentStart_P(S_CONFIGURE_MODULE);
+  WSContentStart_P(PSTR(D_CONFIGURE_MODULE));
   WSContentSend_P(HTTP_SCRIPT_MODULE_TEMPLATE);
 
   WSContentSend_P(PSTR("function sl(){os=\""));
@@ -1968,86 +1983,37 @@ void HandleModuleConfiguration(void)
       midx = pgm_read_byte(kModuleNiceList + i -1);
       vidx = midx +1;
     }
-#ifdef ESP8266
-    WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE, midx, AnyModuleName(midx).c_str(), vidx);
-#else  // ESP32
     WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE_INDEX, midx, AnyModuleName(midx).c_str(), vidx);
-#endif  // ESP8266 - ESP32
   }
   WSContentSend_P(PSTR("\";sk(%d,99);os=\""), Settings.module);
-  for (uint32_t i = 0; i < ARRAY_SIZE(kGpioNiceList); i++) {
-#ifdef ESP8266
-    midx = pgm_read_byte(kGpioNiceList + i);
-    uint32_t ridx = midx;
-    if (!GetUsedInModule(midx, cmodule.io)) {
-      WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE, ridx, GetTextIndexed(stemp, sizeof(stemp), midx, kSensorNames), ridx);
-    }
-#else  // ESP32
-    uint32_t ridx = pgm_read_word(kGpioNiceList + i) & 0xFFE0;
-    midx = BGPIO(ridx);
-    if (!GetUsedInModule(midx, cmodule.io)) {
-      WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE_NO_INDEX, ridx, GetTextIndexed(stemp, sizeof(stemp), midx, kSensorNames));
-    }
-#endif  // ESP8266 - ESP32
-  }
-  WSContentSend_P(PSTR("\";"));
 
-#ifdef ESP32
-  WSContentSend_P(PSTR("hs=["));
-  bool first_done = false;
-  for (uint32_t i = 0; i < ARRAY_SIZE(kGpioNiceList); i++) {  // hs=[36,68,100,132,168,200,232,264,292,324,356,388,421,453];
-    midx = pgm_read_word(kGpioNiceList + i);
-    if (midx & 0x001F) {
-      if (first_done) { WSContentSend_P(PSTR(",")); }
-      WSContentSend_P(PSTR("%d"), midx);
-      first_done = true;
-    }
-  }
-  WSContentSend_P(PSTR("];"));
-#endif  // ESP32
+  WSContentSendNiceLists(0);
 
-  for (uint32_t i = 0; i < ARRAY_SIZE(cmodule.io); i++) {
-    if (ValidGPIO(i, cmodule.io[i])) {
-      WSContentSend_P(PSTR("sk(%d,%d);"), my_module.io[i], i);  // g0 - g16
+  for (uint32_t i = 0; i < ARRAY_SIZE(template_gp.io); i++) {
+    if (ValidGPIO(i, template_gp.io[i])) {
+      WSContentSend_P(PSTR("sk(%d,%d);"), TasmotaGlobal.my_module.io[i], i);  // g0 - g17
     }
   }
 
 #ifdef ESP8266
-#ifndef USE_ADC_VCC
-  WSContentSend_P(PSTR("os=\""));
-  for (uint32_t j = 0; j < ADC0_END; j++) {
-    WSContentSend_P(HTTP_MODULE_TEMPLATE_REPLACE, j, GetTextIndexed(stemp, sizeof(stemp), j, kAdc0Names), j);
-  }
-  WSContentSend_P(PSTR("\";sk(%d," STR(ADC0_PIN) ");"), Settings.my_adc0);
-#endif  // USE_ADC_VCC
+#ifdef USE_ADC
+  WSContentSendAdcNiceList(0);
+  WSContentSend_P(PSTR("\";sk(%d," STR(ADC0_PIN) ");"), Settings.my_gp.io[(sizeof(myio) / 2) -1]);
+#endif  // USE_ADC
 #endif  // ESP8266
 
   WSContentSend_P(PSTR("}wl(sl);"));
 
   WSContentSendStyle();
   WSContentSend_P(HTTP_FORM_MODULE, AnyModuleName(MODULE).c_str());
-  for (uint32_t i = 0; i < ARRAY_SIZE(cmodule.io); i++) {
-    if (ValidGPIO(i, cmodule.io[i])) {
+  for (uint32_t i = 0; i < ARRAY_SIZE(template_gp.io); i++) {
+    if (ValidGPIO(i, template_gp.io[i])) {
       snprintf_P(stemp, 3, PINS_WEMOS +i*2);
-#ifdef ESP8266
-      char sesp8285[40];
-      snprintf_P(sesp8285, sizeof(sesp8285), PSTR("<font color='#%06x'>ESP8285</font>"), WebColor(COL_TEXT_WARNING));
-      WSContentSend_P(PSTR("<tr><td style='width:190px'>%s <b>" D_GPIO "%d</b> %s</td><td style='width:176px'><select id='g%d'></select></td></tr>"),
-        (WEMOS==my_module_type)?stemp:"", i, (0==i)? D_SENSOR_BUTTON "1":(1==i)? D_SERIAL_OUT :(3==i)? D_SERIAL_IN :((9==i)||(10==i))? sesp8285 :(12==i)? D_SENSOR_RELAY "1":(13==i)? D_SENSOR_LED "1i":(14==i)? D_SENSOR :"", i);
-#else  // ESP32
       WSContentSend_P(PSTR("<tr><td style='width:116px'>%s <b>" D_GPIO "%d</b></td><td style='width:150px'><select id='g%d' onchange='ot(%d,this.value)'></select></td>"),
-        (WEMOS==my_module_type)?stemp:"", i, i, i);
+        (WEMOS==TasmotaGlobal.module_type)?stemp:"", i, i, i);
       WSContentSend_P(PSTR("<td style='width:50px'><select id='h%d'></select></td></tr>"), i);
-#endif  // ESP8266
     }
   }
-#ifdef ESP8266
-#ifndef USE_ADC_VCC
-  if (ValidAdc()) {
-    WSContentSend_P(PSTR("<tr><td>%s <b>" D_ADC "0</b></td><td style='width:176px'><select id='g17'></select></td></tr>"), (WEMOS==my_module_type)?"A0":"");
-  }
-#endif  // USE_ADC_VCC
-#endif  // ESP8266
   WSContentSend_P(PSTR("</table>"));
   WSContentSend_P(HTTP_FORM_END);
   WSContentSpaceButton(BUTTON_CONFIGURATION);
@@ -2057,46 +2023,27 @@ void HandleModuleConfiguration(void)
 void ModuleSaveSettings(void)
 {
   char tmp[8];         // WebGetArg numbers only
-  char webindex[5];    // WebGetArg name
 
   WebGetArg("g99", tmp, sizeof(tmp));
   uint32_t new_module = (!strlen(tmp)) ? MODULE : atoi(tmp);
   Settings.last_module = Settings.module;
   Settings.module = new_module;
   SetModuleType();
-  myio cmodule;
-  ModuleGpios(&cmodule);
+  myio template_gp;
+  TemplateGpios(&template_gp);
   String gpios = "";
-  for (uint32_t i = 0; i < ARRAY_SIZE(cmodule.io); i++) {
+  for (uint32_t i = 0; i < ARRAY_SIZE(template_gp.io); i++) {
     if (Settings.last_module != new_module) {
       Settings.my_gp.io[i] = GPIO_NONE;
     } else {
-      if (ValidGPIO(i, cmodule.io[i])) {
-        snprintf_P(webindex, sizeof(webindex), PSTR("g%d"), i);
-        WebGetArg(webindex, tmp, sizeof(tmp));
-        uint32_t value = (!strlen(tmp)) ? 0 : atoi(tmp);
-#ifdef ESP32
-        char tmp2[8];         // WebGetArg numbers only
-        char webindex2[5];    // WebGetArg name
-        snprintf_P(webindex2, sizeof(webindex2), PSTR("h%d"), i);
-        WebGetArg(webindex2, tmp2, sizeof(tmp2));
-        uint32_t value2 = (!strlen(tmp2)) ? 0 : atoi(tmp2) -1;
-        value += value2;
-#endif  // ESP8266 - ESP32
-        Settings.my_gp.io[i] = value;
-        gpios += F(", " D_GPIO ); gpios += String(i); gpios += F(" "); gpios += String(value);
+      if (ValidGPIO(i, template_gp.io[i])) {
+        Settings.my_gp.io[i] = WebGetGpioArg(i);
+        gpios += F(", " D_GPIO ); gpios += String(i); gpios += F(" "); gpios += String(Settings.my_gp.io[i]);
       }
     }
   }
-#ifdef ESP8266
-#ifndef USE_ADC_VCC
-  WebGetArg("g" STR(ADC0_PIN), tmp, sizeof(tmp));
-  Settings.my_adc0 = (!strlen(tmp)) ? 0 : atoi(tmp);
-  gpios += F(", " D_ADC "0 "); gpios += String(Settings.my_adc0);
-#endif  // USE_ADC_VCC
-#endif  // ESP8266
 
-  AddLog_P2(LOG_LEVEL_INFO, PSTR(D_LOG_MODULE "%s " D_CMND_MODULE "%s"), ModuleName().c_str(), gpios.c_str());
+  AddLog_P(LOG_LEVEL_INFO, PSTR(D_LOG_MODULE "%s " D_CMND_MODULE "%s"), ModuleName().c_str(), gpios.c_str());
 }
 
 /*-------------------------------------------------------------------------------------------*/
@@ -2127,7 +2074,7 @@ void HandleWifiConfiguration(void)
 {
   if (!HttpCheckPriviledgedAccess(!WifiIsInManagerMode())) { return; }
 
-  AddLog_P(LOG_LEVEL_DEBUG, S_LOG_HTTP, S_CONFIGURE_WIFI);
+  AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP D_CONFIGURE_WIFI));
 
   if (Webserver->hasArg("save") && HTTP_MANAGER_RESET_ONLY != Web.state) {
     WifiSaveSettings();
@@ -2135,7 +2082,7 @@ void HandleWifiConfiguration(void)
     return;
   }
 
-  WSContentStart_P(S_CONFIGURE_WIFI, !WifiIsInManagerMode());
+  WSContentStart_P(PSTR(D_CONFIGURE_WIFI), !WifiIsInManagerMode());
   WSContentSend_P(HTTP_SCRIPT_WIFI);
   WSContentSendStyle();
 
@@ -2148,8 +2095,8 @@ void HandleWifiConfiguration(void)
       AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_WIFI D_SCAN_DONE));
 
       if (0 == n) {
-        AddLog_P(LOG_LEVEL_DEBUG, S_LOG_WIFI, S_NO_NETWORKS_FOUND);
-        WSContentSend_P(S_NO_NETWORKS_FOUND);
+        AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_WIFI D_NO_NETWORKS_FOUND));
+        WSContentSend_P(PSTR(D_NO_NETWORKS_FOUND));
         WSContentSend_P(PSTR(". " D_REFRESH_TO_SCAN_AGAIN "."));
       } else {
         //sort networks
@@ -2228,7 +2175,7 @@ void WifiSaveSettings(void)
 
   WebGetArg("h", tmp, sizeof(tmp));
   SettingsUpdateText(SET_HOSTNAME, (!strlen(tmp)) ? WIFI_HOSTNAME : tmp);
-  if (strstr(SettingsText(SET_HOSTNAME), "%") != nullptr) {
+  if (strchr(SettingsText(SET_HOSTNAME), '%') != nullptr) {
     SettingsUpdateText(SET_HOSTNAME, WIFI_HOSTNAME);
   }
   WebGetArg("c", tmp, sizeof(tmp));
@@ -2241,7 +2188,7 @@ void WifiSaveSettings(void)
   SettingsUpdateText(SET_STAPWD1, (!strlen(tmp)) ? "" : (strlen(tmp) < 5) ? SettingsText(SET_STAPWD1) : tmp);
   WebGetArg("p2", tmp, sizeof(tmp));
   SettingsUpdateText(SET_STAPWD2, (!strlen(tmp)) ? "" : (strlen(tmp) < 5) ? SettingsText(SET_STAPWD2) : tmp);
-  AddLog_P2(LOG_LEVEL_INFO, PSTR(D_LOG_WIFI D_CMND_HOSTNAME " %s, " D_CMND_SSID "1 %s, " D_CMND_SSID "2 %s, " D_CMND_CORS " %s"),
+  AddLog_P(LOG_LEVEL_INFO, PSTR(D_LOG_WIFI D_CMND_HOSTNAME " %s, " D_CMND_SSID "1 %s, " D_CMND_SSID "2 %s, " D_CMND_CORS " %s"),
     SettingsText(SET_HOSTNAME), SettingsText(SET_STASSID1), SettingsText(SET_STASSID2), SettingsText(SET_CORS));
 }
 
@@ -2251,7 +2198,7 @@ void HandleLoggingConfiguration(void)
 {
   if (!HttpCheckPriviledgedAccess()) { return; }
 
-  AddLog_P(LOG_LEVEL_DEBUG, S_LOG_HTTP, S_CONFIGURE_LOGGING);
+  AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP D_CONFIGURE_LOGGING));
 
   if (Webserver->hasArg("save")) {
     LoggingSaveSettings();
@@ -2259,7 +2206,7 @@ void HandleLoggingConfiguration(void)
     return;
   }
 
-  WSContentStart_P(S_CONFIGURE_LOGGING);
+  WSContentStart_P(PSTR(D_CONFIGURE_LOGGING));
   WSContentSendStyle();
   WSContentSend_P(HTTP_FORM_LOG1);
   char stemp1[45];
@@ -2306,7 +2253,7 @@ void LoggingSaveSettings(void)
   if ((Settings.tele_period > 0) && (Settings.tele_period < 10)) {
     Settings.tele_period = 10;   // Do not allow periods < 10 seconds
   }
-  AddLog_P2(LOG_LEVEL_INFO, PSTR(D_LOG_LOG D_CMND_SERIALLOG " %d, " D_CMND_WEBLOG " %d, " D_CMND_MQTTLOG " %d, " D_CMND_SYSLOG " %d, " D_CMND_LOGHOST " %s, " D_CMND_LOGPORT " %d, " D_CMND_TELEPERIOD " %d"),
+  AddLog_P(LOG_LEVEL_INFO, PSTR(D_LOG_LOG D_CMND_SERIALLOG " %d, " D_CMND_WEBLOG " %d, " D_CMND_MQTTLOG " %d, " D_CMND_SYSLOG " %d, " D_CMND_LOGHOST " %s, " D_CMND_LOGPORT " %d, " D_CMND_TELEPERIOD " %d"),
     Settings.seriallog_level, Settings.weblog_level, Settings.mqttlog_level, Settings.syslog_level, SettingsText(SET_SYSLOG_HOST), Settings.syslog_port, Settings.tele_period);
 }
 
@@ -2316,7 +2263,7 @@ void HandleOtherConfiguration(void)
 {
   if (!HttpCheckPriviledgedAccess()) { return; }
 
-  AddLog_P(LOG_LEVEL_DEBUG, S_LOG_HTTP, S_CONFIGURE_OTHER);
+  AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP D_CONFIGURE_OTHER));
 
   if (Webserver->hasArg("save")) {
     OtherSaveSettings();
@@ -2324,17 +2271,17 @@ void HandleOtherConfiguration(void)
     return;
   }
 
-  WSContentStart_P(S_CONFIGURE_OTHER);
+  WSContentStart_P(PSTR(D_CONFIGURE_OTHER));
   WSContentSendStyle();
 
   TemplateJson();
-  char stemp[strlen(mqtt_data) +1];
-  strlcpy(stemp, mqtt_data, sizeof(stemp));  // Get JSON template
+  char stemp[strlen(TasmotaGlobal.mqtt_data) +1];
+  strlcpy(stemp, TasmotaGlobal.mqtt_data, sizeof(stemp));  // Get JSON template
   WSContentSend_P(HTTP_FORM_OTHER, stemp, (USER_MODULE == Settings.module) ? " checked disabled" : "",
     (Settings.flag.mqtt_enabled) ? " checked" : "",   // SetOption3 - Enable MQTT
     SettingsText(SET_FRIENDLYNAME1), SettingsText(SET_DEVICENAME));
 
-  uint32_t maxfn = (devices_present > MAX_FRIENDLYNAMES) ? MAX_FRIENDLYNAMES : (!devices_present) ? 1 : devices_present;
+  uint32_t maxfn = (TasmotaGlobal.devices_present > MAX_FRIENDLYNAMES) ? MAX_FRIENDLYNAMES : (!TasmotaGlobal.devices_present) ? 1 : TasmotaGlobal.devices_present;
 #ifdef USE_SONOFF_IFAN
   if (IsModuleIfan()) { maxfn = 1; }
 #endif  // USE_SONOFF_IFAN
@@ -2429,10 +2376,10 @@ void HandleBackupConfiguration(void)
   char attachment[TOPSZ];
 
 //  char friendlyname[TOPSZ];
-//  snprintf_P(attachment, sizeof(attachment), PSTR("attachment; filename=Config_%s_%s.dmp"), NoAlNumToUnderscore(friendlyname, SettingsText(SET_FRIENDLYNAME1)), my_version);
+//  snprintf_P(attachment, sizeof(attachment), PSTR("attachment; filename=Config_%s_%s.dmp"), NoAlNumToUnderscore(friendlyname, SettingsText(SET_FRIENDLYNAME1)), TasmotaGlobal.version);
 
-  char hostname[sizeof(my_hostname)];
-  snprintf_P(attachment, sizeof(attachment), PSTR("attachment; filename=Config_%s_%s.dmp"), NoAlNumToUnderscore(hostname, my_hostname), my_version);
+  char hostname[sizeof(TasmotaGlobal.hostname)];
+  snprintf_P(attachment, sizeof(attachment), PSTR("attachment; filename=Config_%s_%s.dmp"), NoAlNumToUnderscore(hostname, TasmotaGlobal.hostname), TasmotaGlobal.version);
 
   Webserver->sendHeader(F("Content-Disposition"), attachment);
 
@@ -2461,9 +2408,9 @@ void HandleResetConfiguration(void)
 {
   if (!HttpCheckPriviledgedAccess(!WifiIsInManagerMode())) { return; }
 
-  AddLog_P(LOG_LEVEL_DEBUG, S_LOG_HTTP, S_RESET_CONFIGURATION);
+  AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP D_RESET_CONFIGURATION));
 
-  WSContentStart_P(S_RESET_CONFIGURATION, !WifiIsInManagerMode());
+  WSContentStart_P(PSTR(D_RESET_CONFIGURATION), !WifiIsInManagerMode());
   WSContentSendStyle();
   WSContentSend_P(PSTR("<div style='text-align:center;'>" D_CONFIGURATION_RESET "</div>"));
   WSContentSend_P(HTTP_MSG_RSTRT);
@@ -2479,9 +2426,9 @@ void HandleRestoreConfiguration(void)
 {
   if (!HttpCheckPriviledgedAccess()) { return; }
 
-  AddLog_P(LOG_LEVEL_DEBUG, S_LOG_HTTP, S_RESTORE_CONFIGURATION);
+  AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP D_RESTORE_CONFIGURATION));
 
-  WSContentStart_P(S_RESTORE_CONFIGURATION);
+  WSContentStart_P(PSTR(D_RESTORE_CONFIGURATION));
   WSContentSendStyle();
   WSContentSend_P(HTTP_FORM_RST);
   WSContentSend_P(HTTP_FORM_RST_UPG, D_RESTORE);
@@ -2502,30 +2449,31 @@ void HandleInformation(void)
 {
   if (!HttpCheckPriviledgedAccess()) { return; }
 
-  AddLog_P(LOG_LEVEL_DEBUG, S_LOG_HTTP, S_INFORMATION);
+  AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP D_INFORMATION));
 
   char stopic[TOPSZ];
 
   int freeMem = ESP_getFreeHeap();
 
-  WSContentStart_P(S_INFORMATION);
+  WSContentStart_P(PSTR(D_INFORMATION));
   // Save 1k of code space replacing table html with javascript replace codes
   // }1 = </td></tr><tr><th>
   // }2 = </th><td>
   WSContentSend_P(HTTP_SCRIPT_INFO_BEGIN);
   WSContentSend_P(PSTR("<table style='width:100%%'><tr><th>"));
-  WSContentSend_P(PSTR(D_PROGRAM_VERSION "}2%s%s"), my_version, my_image);
+  WSContentSend_P(PSTR(D_PROGRAM_VERSION "}2%s%s"), TasmotaGlobal.version, TasmotaGlobal.image_name);
   WSContentSend_P(PSTR("}1" D_BUILD_DATE_AND_TIME "}2%s"), GetBuildDateAndTime().c_str());
   WSContentSend_P(PSTR("}1" D_CORE_AND_SDK_VERSION "}2" ARDUINO_CORE_RELEASE "/%s"), ESP.getSdkVersion());
   WSContentSend_P(PSTR("}1" D_UPTIME "}2%s"), GetUptime().c_str());
 #ifdef ESP8266
   WSContentSend_P(PSTR("}1" D_FLASH_WRITE_COUNT "}2%d at 0x%X"), Settings.save_flag, GetSettingsAddress());
-#else
+#endif  // ESP8266
+#ifdef ESP32
   WSContentSend_P(PSTR("}1" D_FLASH_WRITE_COUNT "}2%d"), Settings.save_flag);
-#endif
+#endif  // ESP32
   WSContentSend_P(PSTR("}1" D_BOOT_COUNT "}2%d"), Settings.bootcount);
   WSContentSend_P(PSTR("}1" D_RESTART_REASON "}2%s"), GetResetReason().c_str());
-  uint32_t maxfn = (devices_present > MAX_FRIENDLYNAMES) ? MAX_FRIENDLYNAMES : devices_present;
+  uint32_t maxfn = (TasmotaGlobal.devices_present > MAX_FRIENDLYNAMES) ? MAX_FRIENDLYNAMES : TasmotaGlobal.devices_present;
 #ifdef USE_SONOFF_IFAN
   if (IsModuleIfan()) { maxfn = 1; }
 #endif  // USE_SONOFF_IFAN
@@ -2546,7 +2494,7 @@ void HandleInformation(void)
   if (Settings.flag4.network_wifi) {
     int32_t rssi = WiFi.RSSI();
     WSContentSend_P(PSTR("}1" D_AP "%d " D_SSID " (" D_RSSI ")}2%s (%d%%, %d dBm)"), Settings.sta_active +1, HtmlEscape(SettingsText(SET_STASSID1 + Settings.sta_active)).c_str(), WifiGetRssiAsQuality(rssi), rssi);
-    WSContentSend_P(PSTR("}1" D_HOSTNAME "}2%s%s"), my_hostname, (Mdns.begun) ? ".local" : "");
+    WSContentSend_P(PSTR("}1" D_HOSTNAME "}2%s%s"), TasmotaGlobal.hostname, (Mdns.begun) ? ".local" : "");
 #if LWIP_IPV6
     String ipv6_addr = WifiGetIPv6();
     if (ipv6_addr != "") {
@@ -2559,7 +2507,7 @@ void HandleInformation(void)
       WSContentSend_P(PSTR("}1<hr/>}2<hr/>"));
     }
   }
-  if (!global_state.network_down) {
+  if (!TasmotaGlobal.global_state.network_down) {
     WSContentSend_P(PSTR("}1" D_GATEWAY "}2%s"), IPAddress(Settings.ip_address[1]).toString().c_str());
     WSContentSend_P(PSTR("}1" D_SUBNET_MASK "}2%s"), IPAddress(Settings.ip_address[2]).toString().c_str());
     WSContentSend_P(PSTR("}1" D_DNS_SERVER "}2%s"), IPAddress(Settings.ip_address[3]).toString().c_str());
@@ -2578,7 +2526,7 @@ void HandleInformation(void)
     WSContentSend_P(PSTR("}1" D_MQTT_TLS_ENABLE "}2%s"), Settings.flag4.mqtt_tls ? PSTR(D_ENABLED) : PSTR(D_DISABLED));
 #endif // USE_MQTT_TLS
     WSContentSend_P(PSTR("}1" D_MQTT_USER "}2%s"), SettingsText(SET_MQTT_USER));
-    WSContentSend_P(PSTR("}1" D_MQTT_CLIENT "}2%s"), mqtt_client);
+    WSContentSend_P(PSTR("}1" D_MQTT_CLIENT "}2%s"), TasmotaGlobal.mqtt_client);
     WSContentSend_P(PSTR("}1" D_MQTT_TOPIC "}2%s"), SettingsText(SET_MQTT_TOPIC));
     uint32_t real_index = SET_MQTT_GRP_TOPIC;
     for (uint32_t i = 0; i < MAX_GROUP_TOPICS; i++) {
@@ -2587,7 +2535,7 @@ void HandleInformation(void)
         WSContentSend_P(PSTR("}1" D_MQTT_GROUP_TOPIC " %d}2%s"), 1 +i, GetGroupTopic_P(stopic, "", real_index +i));
       }
     }
-    WSContentSend_P(PSTR("}1" D_MQTT_FULL_TOPIC "}2%s"), GetTopic_P(stopic, CMND, mqtt_topic, ""));
+    WSContentSend_P(PSTR("}1" D_MQTT_FULL_TOPIC "}2%s"), GetTopic_P(stopic, CMND, TasmotaGlobal.mqtt_topic, ""));
     WSContentSend_P(PSTR("}1" D_MQTT " " D_FALLBACK_TOPIC "}2%s"), GetFallbackTopic_P(stopic, ""));
     WSContentSend_P(PSTR("}1" D_MQTT_NO_RETAIN "}2%s"), Settings.flag4.mqtt_no_retain ? PSTR(D_ENABLED) : PSTR(D_DISABLED));
   } else {
@@ -2645,13 +2593,59 @@ void HandleInformation(void)
 
 /*-------------------------------------------------------------------------------------------*/
 
+#if defined(USE_ZIGBEE_EZSP) || defined(USE_TASMOTA_CLIENT) || defined(SHELLY_FW_UPGRADE) || defined(USE_RF_FLASH) || defined(USE_CCLOADER)
+#define USE_WEB_FW_UPGRADE
+#endif
+
+#ifdef USE_WEB_FW_UPGRADE
+
+struct {
+  size_t spi_hex_size;
+  size_t spi_sector_counter;
+  size_t spi_sector_cursor;
+  bool active;
+  bool ready;
+} BUpload;
+
+void BUploadInit(uint32_t file_type) {
+  Web.upload_file_type = file_type;
+  BUpload.spi_hex_size = 0;
+  BUpload.spi_sector_counter = FlashWriteStartSector();
+  BUpload.spi_sector_cursor = 0;
+  BUpload.active = true;
+  BUpload.ready = false;
+}
+
+uint32_t BUploadWriteBuffer(uint8_t *buf, size_t size) {
+  if (0 == BUpload.spi_sector_cursor) { // Starting a new sector write so we need to erase it first
+    if (!ESP.flashEraseSector(BUpload.spi_sector_counter)) {
+      return 7;  // Upload aborted - flash failed
+    }
+  }
+  BUpload.spi_sector_cursor++;
+  if (!ESP.flashWrite((BUpload.spi_sector_counter * SPI_FLASH_SEC_SIZE) + ((BUpload.spi_sector_cursor -1) * HTTP_UPLOAD_BUFLEN), (uint32_t*)buf, size)) {
+    return 7;  // Upload aborted - flash failed
+  }
+  BUpload.spi_hex_size += size;
+  if (2 == BUpload.spi_sector_cursor) {  // The web upload sends 2048 bytes at a time so keep track of the cursor position to reset it for the next flash sector erase
+    BUpload.spi_sector_cursor = 0;
+    BUpload.spi_sector_counter++;
+    if (BUpload.spi_sector_counter > FlashWriteMaxSector()) {
+      return 9;  // File too large - Not enough free space
+    }
+  }
+  return 0;
+}
+
+#endif  // USE_WEB_FW_UPGRADE
+
 void HandleUpgradeFirmware(void)
 {
   if (!HttpCheckPriviledgedAccess()) { return; }
 
-  AddLog_P(LOG_LEVEL_DEBUG, S_LOG_HTTP, S_FIRMWARE_UPGRADE);
+  AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP D_FIRMWARE_UPGRADE));
 
-  WSContentStart_P(S_FIRMWARE_UPGRADE);
+  WSContentStart_P(PSTR(D_FIRMWARE_UPGRADE));
   WSContentSendStyle();
   WSContentSend_P(HTTP_FORM_UPG, SettingsText(SET_OTAURL));
   WSContentSend_P(HTTP_FORM_RST_UPG, D_UPGRADE);
@@ -2678,7 +2672,7 @@ void HandleUpgradeFirmwareStart(void)
     ExecuteWebCommand(command, SRC_WEBGUI);
   }
 
-  WSContentStart_P(S_INFORMATION);
+  WSContentStart_P(PSTR(D_INFORMATION));
   WSContentSend_P(HTTP_SCRIPT_RELOAD_TIME, HTTP_OTA_RESTART_RECONNECT_TIME);
   WSContentSendStyle();
   WSContentSend_P(PSTR("<div style='text-align:center;'><b>" D_UPGRADE_STARTED " ...</b></div>"));
@@ -2694,84 +2688,59 @@ void HandleUploadDone(void)
 {
   if (!HttpCheckPriviledgedAccess()) { return; }
 
-#if defined(USE_ZIGBEE) && defined(USE_ZIGBEE_EZSP)
-  if (!Web.upload_error) {
+#if defined(USE_ZIGBEE_EZSP)
+  if ((UPL_EFR32 == Web.upload_file_type) && !Web.upload_error && BUpload.ready) {
+    BUpload.ready = false;  //  Make sure not to follow thru again
     // GUI xmodem
-    if (ZigbeeUploadOtaReady()) {
-      HandleZigbeeXfer();
-      return;
-    }
+    ZigbeeUploadStep1Done(FlashWriteStartSector(), BUpload.spi_hex_size);
+    HandleZigbeeXfer();
+    return;
   }
-#endif
+#endif  // USE_ZIGBEE_EZSP
 
   AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP D_UPLOAD_DONE));
 
   char error[100];
 
   WifiConfigCounter();
-  restart_flag = 0;
+  TasmotaGlobal.restart_flag = 0;
   MqttRetryCounter(0);
 #ifdef USE_COUNTER
   CounterInterruptDisable(false);
 #endif  // USE_COUNTER
 
-  WSContentStart_P(S_INFORMATION);
+  WSContentStart_P(PSTR(D_INFORMATION));
   if (!Web.upload_error) {
-    uint32_t javascript_settimeout = HTTP_OTA_RESTART_RECONNECT_TIME;
-#if defined(USE_ZIGBEE) && defined(USE_ZIGBEE_EZSP)
-    if (ZigbeeUploadFinish()) {
-      javascript_settimeout = 10000;                                  // Refesh main web ui after transfer upgrade
-    }
-#endif
-    WSContentSend_P(HTTP_SCRIPT_RELOAD_TIME, javascript_settimeout);  // Refesh main web ui after OTA upgrade
+    WSContentSend_P(HTTP_SCRIPT_RELOAD_TIME, (UPL_TASMOTA == Web.upload_file_type) ? HTTP_OTA_RESTART_RECONNECT_TIME : HTTP_RESTART_RECONNECT_TIME);  // Refesh main web ui after OTA upgrade
   }
   WSContentSendStyle();
   WSContentSend_P(PSTR("<div style='text-align:center;'><b>" D_UPLOAD " <font color='#"));
   if (Web.upload_error) {
     WSContentSend_P(PSTR("%06x'>" D_FAILED "</font></b><br><br>"), WebColor(COL_TEXT_WARNING));
-#ifdef USE_RF_FLASH
-    if (Web.upload_error < 15) {
-#else
-    if ((Web.upload_error < 10) || (14 == Web.upload_error)) {
-      if (14 == Web.upload_error) { Web.upload_error = 10; }
-#endif
+    if (Web.upload_error < 10) {
       GetTextIndexed(error, sizeof(error), Web.upload_error -1, kUploadErrors);
     } else {
       snprintf_P(error, sizeof(error), PSTR(D_UPLOAD_ERROR_CODE " %d"), Web.upload_error);
     }
     WSContentSend_P(error);
     DEBUG_CORE_LOG(PSTR("UPL: %s"), error);
-    stop_flash_rotate = Settings.flag.stop_flash_rotate;  // SetOption12 - Switch between dynamic or fixed slot flash save location
+    TasmotaGlobal.stop_flash_rotate = Settings.flag.stop_flash_rotate;  // SetOption12 - Switch between dynamic or fixed slot flash save location
   } else {
     WSContentSend_P(PSTR("%06x'>" D_SUCCESSFUL "</font></b><br>"), WebColor(COL_TEXT_SUCCESS));
-    restart_flag = 2;  // Always restart to re-enable disabled features during update
-#ifdef USE_TASMOTA_CLIENT
-    if (TasmotaClient_GetFlagFlashing()) {
-      WSContentSend_P(PSTR("<br><div style='text-align:center;'><b>" D_TRANSFER_STARTED " ...</b></div>"));
-      restart_flag = 0;  // Hold restart as code still needs to be transferred to Atmega
-    }
-#endif  // USE_TASMOTA_CLIENT
-    if (restart_flag) {
-      WSContentSend_P(HTTP_MSG_RSTRT);
-      ShowWebSource(SRC_WEBGUI);
-    }
+    TasmotaGlobal.restart_flag = 2;  // Always restart to re-enable disabled features during update
+    WSContentSend_P(HTTP_MSG_RSTRT);
+    ShowWebSource(SRC_WEBGUI);
   }
   SettingsBufferFree();
   WSContentSend_P(PSTR("</div><br>"));
   WSContentSpaceButton(BUTTON_MAIN);
   WSContentStop();
-
-#ifdef USE_TASMOTA_CLIENT
-  if (TasmotaClient_GetFlagFlashing()) {
-    TasmotaClient_Flash();
-  }
-#endif
 }
 
 void HandleUploadLoop(void)
 {
   // Based on ESP8266HTTPUpdateServer.cpp uses ESP8266WebServer Parsing.cpp and Cores Updater.cpp (Update)
-  bool _serialoutput = (LOG_LEVEL_DEBUG <= seriallog_level);
+  bool _serialoutput = (LOG_LEVEL_DEBUG <= TasmotaGlobal.seriallog_level);
 
   if (HTTP_USER == Web.state) { return; }
   if (Web.upload_error) {
@@ -2783,13 +2752,13 @@ void HandleUploadLoop(void)
 
   // ***** Step1: Start upload file
   if (UPLOAD_FILE_START == upload.status) {
-    restart_flag = 60;
+    TasmotaGlobal.restart_flag = 60;
     if (0 == upload.filename.c_str()[0]) {
       Web.upload_error = 1;  // No file selected
       return;
     }
     SettingsSave(1);  // Free flash for upload
-    AddLog_P2(LOG_LEVEL_INFO, PSTR(D_LOG_UPLOAD D_FILE " %s ..."), upload.filename.c_str());
+    AddLog_P(LOG_LEVEL_INFO, PSTR(D_LOG_UPLOAD D_FILE " %s ..."), upload.filename.c_str());
     if (UPL_SETTINGS == Web.upload_file_type) {
       if (!SettingsBufferAlloc()) {
         Web.upload_error = 2;  // Not enough space
@@ -2809,149 +2778,104 @@ void HandleUploadLoop(void)
       if (Settings.flag.mqtt_enabled) {  // SetOption3 - Enable MQTT
         MqttDisconnect();
       }
-      uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-      if (!Update.begin(maxSketchSpace)) {         //start with max available size
-
-//        if (_serialoutput) Update.printError(Serial);
-//        if (Update.getError() == UPDATE_ERROR_BOOTSTRAP) {
-//          if (_serialoutput) Serial.println("Device still in UART update mode, perform powercycle");
-//        }
-
-        Web.upload_error = 2;  // Not enough space
-        return;
-      }
     }
     Web.upload_progress_dot_count = 0;
   }
 
   // ***** Step2: Write upload file
-  else if (!Web.upload_error && (UPLOAD_FILE_WRITE == upload.status)) {
-    if (0 == upload.totalSize) {
+  else if (UPLOAD_FILE_WRITE == upload.status) {
+    if (0 == upload.totalSize) {  // First block received
       if (UPL_SETTINGS == Web.upload_file_type) {
         Web.config_block_count = 0;
       }
-      else {
-#if defined(USE_ZIGBEE) && defined(USE_ZIGBEE_EZSP)
-#ifdef ESP8266
-        if ((SONOFF_ZB_BRIDGE == my_module_type) && (upload.buf[0] == 0xEB)) {  // Check if this is a Zigbee bridge FW file
-#else  // ESP32
-        if (PinUsed(GPIO_ZIGBEE_RX) && PinUsed(GPIO_ZIGBEE_TX) && (upload.buf[0] == 0xEB)) {  // Check if this is a Zigbee bridge FW file
-#endif  // ESP8266 or ESP32
-          Update.end();              // End esp8266 update session
-          Web.upload_file_type = UPL_EFR32;
-
-          Web.upload_error = ZigbeeUploadInit();  // 15
-          if (Web.upload_error != 0) { return; }
-        } else
-#endif  // USE_ZIGBEE and USE_ZIGBEE_EZSP
+#ifdef USE_WEB_FW_UPGRADE
 #ifdef USE_RF_FLASH
-        if ((SONOFF_BRIDGE == my_module_type) && (upload.buf[0] == ':')) {  // Check if this is a RF bridge FW file
-          Update.end();              // End esp8266 update session
-          Web.upload_file_type = UPL_EFM8BB1;
-
-          Web.upload_error = SnfBrUpdateInit();  // 10, 11
-          if (Web.upload_error != 0) { return; }
-        } else
+      else if ((SONOFF_BRIDGE == TasmotaGlobal.module_type) && (':' == upload.buf[0])) {  // Check if this is a RF bridge FW file
+        BUploadInit(UPL_EFM8BB1);
+      }
 #endif  // USE_RF_FLASH
 #ifdef USE_TASMOTA_CLIENT
-        if (TasmotaClient_Available() && (upload.buf[0] == ':')) {  // Check if this is a ARDUINO CLIENT hex file
-          Update.end();              // End esp8266 update session
-          Web.upload_file_type = UPL_TASMOTACLIENT;
-
-          Web.upload_error = TasmotaClient_UpdateInit();  // 0
-          if (Web.upload_error != 0) { return; }
-        } else
-#endif
-        {
-          if ((upload.buf[0] != 0xE9) && (upload.buf[0] != 0x1F)) {  // 0x1F is gzipped 0xE9
-            Web.upload_error = 3;  // Magic byte is not 0xE9
+      else if (TasmotaClient_Available() && (':' == upload.buf[0])) {  // Check if this is a ARDUINO CLIENT hex file
+        BUploadInit(UPL_TASMOTACLIENT);
+      }
+#endif  // USE_TASMOTA_CLIENT
+#ifdef SHELLY_FW_UPGRADE
+      else if (ShdPresent() && (0x00 == upload.buf[0]) && (0x10 == upload.buf[1])) {
+        BUploadInit(UPL_SHD);
+      }
+#endif  // SHELLY_FW_UPGRADE
+#ifdef USE_CCLOADER
+      else if (CCLChipFound() && 0x02 == upload.buf[0]) { // the 0x02 is only an assumption!!
+        BUploadInit(UPL_CCL);
+      }
+#endif  // USE_CCLOADER
+#ifdef USE_ZIGBEE_EZSP
+#ifdef ESP8266
+      else if ((SONOFF_ZB_BRIDGE == TasmotaGlobal.module_type) && (0xEB == upload.buf[0])) {  // Check if this is a Zigbee bridge FW file
+#endif  // ESP8266
+#ifdef ESP32
+      else if (PinUsed(GPIO_ZIGBEE_RX) && PinUsed(GPIO_ZIGBEE_TX) && (0xEB == upload.buf[0])) {  // Check if this is a Zigbee bridge FW file
+#endif  // ESP32
+        // Read complete file into ESP8266 flash
+        // Current files are about 200k
+        Web.upload_error = ZigbeeUploadStep1Init();  // 1
+        if (Web.upload_error != 0) { return; }
+        BUploadInit(UPL_EFR32);
+      }
+#endif  // USE_ZIGBEE_EZSP
+#endif  // USE_WEB_FW_UPGRADE
+      else if ((upload.buf[0] != 0xE9) && (upload.buf[0] != 0x1F)) {  // 0x1F is gzipped 0xE9
+        Web.upload_error = 3;      // Invalid file signature - Magic byte is not 0xE9
+        return;
+      }
+      if (UPL_TASMOTA == Web.upload_file_type) {
+        if (0xE9 == upload.buf[0]) {
+          uint32_t bin_flash_size = ESP.magicFlashChipSize((upload.buf[3] & 0xf0) >> 4);
+          if (bin_flash_size > ESP.getFlashChipRealSize()) {
+            Web.upload_error = 4;  // Program flash size is larger than real flash size
             return;
           }
-          if (0xE9 == upload.buf[0]) {
-            uint32_t bin_flash_size = ESP.magicFlashChipSize((upload.buf[3] & 0xf0) >> 4);
-            if (bin_flash_size > ESP.getFlashChipRealSize()) {
-              Web.upload_error = 4;  // Program flash size is larger than real flash size
-              return;
-            }
-//            upload.buf[2] = 3;  // Force DOUT - ESP8285
-          }
+  //            upload.buf[2] = 3;  // Force DOUT - ESP8285
         }
-        AddLog_P2(LOG_LEVEL_DEBUG, PSTR(D_LOG_UPLOAD "File type %d"), Web.upload_file_type);
-      }
-    }
-    if (UPL_SETTINGS == Web.upload_file_type) {
-      if (!Web.upload_error) {
-        if (upload.currentSize > (sizeof(Settings) - (Web.config_block_count * HTTP_UPLOAD_BUFLEN))) {
-          Web.upload_error = 9;  // File too large
+        uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+        if (!Update.begin(maxSketchSpace)) {         //start with max available size
+          Web.upload_error = 2;  // Not enough space
           return;
         }
-        memcpy(settings_buffer + (Web.config_block_count * HTTP_UPLOAD_BUFLEN), upload.buf, upload.currentSize);
-        Web.config_block_count++;
       }
-    }
-#if defined(USE_ZIGBEE) && defined(USE_ZIGBEE_EZSP)
-    else if (UPL_EFR32 == Web.upload_file_type) {
-      // Write buffers to MCU EFR32
-      if (!ZigbeeUploadWriteBuffer(upload.buf, upload.currentSize)) {
+      AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_UPLOAD "File type %d"), Web.upload_file_type);
+    }  // First block received
+
+    if (UPL_SETTINGS == Web.upload_file_type) {
+      if (upload.currentSize > (sizeof(Settings) - (Web.config_block_count * HTTP_UPLOAD_BUFLEN))) {
         Web.upload_error = 9;  // File too large
         return;
       }
+      memcpy(settings_buffer + (Web.config_block_count * HTTP_UPLOAD_BUFLEN), upload.buf, upload.currentSize);
+      Web.config_block_count++;
     }
-#endif  // USE_ZIGBEE and USE_ZIGBEE_EZSP
-#ifdef USE_RF_FLASH
-    else if (UPL_EFM8BB1 == Web.upload_file_type) {
-      if (efm8bb1_update != nullptr) {    // We have carry over data since last write, i. e. a start but not an end
-        ssize_t result = rf_glue_remnant_with_new_data_and_write(efm8bb1_update, upload.buf, upload.currentSize);
-        free(efm8bb1_update);
-        efm8bb1_update = nullptr;
-        if (result != 0) {
-          Web.upload_error = abs(result);  // 2 = Not enough space, 8 = File invalid, 12, 13
-          return;
-        }
-      }
-      ssize_t result = rf_search_and_write(upload.buf, upload.currentSize);
-      if (result < 0) {
-        Web.upload_error = abs(result);  // 8, 12, 13
-        return;
-      } else if (result > 0) {
-        if ((size_t)result > upload.currentSize) {
-          // Offset is larger than the buffer supplied, this should not happen
-          Web.upload_error = 9;  // File too large - Failed to decode RF firmware
-          return;
-        }
-        // A remnant has been detected, allocate data for it plus a null termination byte
-        size_t remnant_sz = upload.currentSize - result;
-        efm8bb1_update = (uint8_t *) malloc(remnant_sz + 1);
-        if (efm8bb1_update == nullptr) {
-          Web.upload_error = 2;  // Not enough space - Unable to allocate memory to store new RF firmware
-          return;
-        }
-        memcpy(efm8bb1_update, upload.buf + result, remnant_sz);
-        // Add null termination at the end of of remnant buffer
-        efm8bb1_update[remnant_sz] = '\0';
-      }
+#ifdef USE_WEB_FW_UPGRADE
+    else if (BUpload.active) {
+      // Write a block
+//      AddLog_P(LOG_LEVEL_DEBUG, PSTR("DBG: Size %d"), upload.currentSize);
+//      AddLogBuffer(LOG_LEVEL_DEBUG, upload.buf, 32);
+      Web.upload_error = BUploadWriteBuffer(upload.buf, upload.currentSize);
+      if (Web.upload_error != 0) { return; }
     }
-#endif  // USE_RF_FLASH
-#ifdef USE_TASMOTA_CLIENT
-    else if (UPL_TASMOTACLIENT == Web.upload_file_type) {
-      TasmotaClient_WriteBuffer(upload.buf, upload.currentSize);
+#endif  // USE_WEB_FW_UPGRADE
+    else if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+      Web.upload_error = 5;  // Upload buffer miscompare
+      return;
     }
-#endif
-    else {  // firmware
-      if (!Web.upload_error && (Update.write(upload.buf, upload.currentSize) != upload.currentSize)) {
-        Web.upload_error = 5;  // Upload buffer miscompare
-        return;
-      }
-      if (_serialoutput) {
-        Serial.printf(".");
-        Web.upload_progress_dot_count++;
-        if (!(Web.upload_progress_dot_count % 80)) { Serial.println(); }
-      }
+    if (_serialoutput) {
+      Serial.printf(".");
+      Web.upload_progress_dot_count++;
+      if (!(Web.upload_progress_dot_count % 80)) { Serial.println(); }
     }
   }
 
   // ***** Step3: Finish upload file
-  else if(!Web.upload_error && (UPLOAD_FILE_END == upload.status)) {
+  else if (UPLOAD_FILE_END == upload.status) {
     if (_serialoutput && (Web.upload_progress_dot_count % 80)) {
       Serial.println();
     }
@@ -2995,45 +2919,62 @@ void HandleUploadLoop(void)
         return;
       }
     }
-#if defined(USE_ZIGBEE) && defined(USE_ZIGBEE_EZSP)
-    else if (UPL_EFR32 == Web.upload_file_type) {
-      // Zigbee FW upload to ESP8266 flash is done
-      ZigbeeUploadDone();  // Signal upload done and ready for delayed upload to MCU EFR32
-      Web.upload_file_type = UPL_TASMOTA;
-    }
-#endif
+#ifdef USE_WEB_FW_UPGRADE
+    else if (BUpload.active) {
+      // Done writing the data to SPI flash
+      BUpload.active = false;
+
+      AddLog_P(LOG_LEVEL_INFO, PSTR(D_LOG_UPLOAD "Transfer %u bytes"), upload.totalSize);
+
+      uint8_t* data = FlashDirectAccess();
+
+//      uint32_t* values = (uint32_t*)(data);  // Only 4-byte access allowed
+//      AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_UPLOAD "Head 0x%08X"), values[0]);
+
+      uint32_t error = 0;
 #ifdef USE_RF_FLASH
-    else if (UPL_EFM8BB1 == Web.upload_file_type) {
-      // RF FW flash done
-      Web.upload_file_type = UPL_TASMOTA;
-    }
+      if (UPL_EFM8BB1 == Web.upload_file_type) {
+        error = SnfBrUpdateFirmware(data, BUpload.spi_hex_size);
+      }
 #endif  // USE_RF_FLASH
 #ifdef USE_TASMOTA_CLIENT
-    else if (UPL_TASMOTACLIENT == Web.upload_file_type) {
-      // Done writing the hex to SPI flash
-      TasmotaClient_SetFlagFlashing(true); // So we know on upload success page if it needs to flash hex or do a normal restart
-      Web.upload_file_type = UPL_TASMOTA;
-    }
-#endif
-    else {
-      if (!Update.end(true)) { // true to set the size to the current progress
-        if (_serialoutput) { Update.printError(Serial); }
-        Web.upload_error = 6;  // Upload failed. Enable logging 3
+      if (UPL_TASMOTACLIENT == Web.upload_file_type) {
+        error = TasmotaClient_Flash(data, BUpload.spi_hex_size);
+      }
+#endif  // USE_TASMOTA_CLIENT
+#ifdef SHELLY_FW_UPGRADE
+      if (UPL_SHD == Web.upload_file_type) {
+        error = ShdFlash(data, BUpload.spi_hex_size);
+      }
+#endif  // SHELLY_FW_UPGRADE
+#ifdef USE_CCLOADER
+      if (UPL_CCL == Web.upload_file_type) {
+        error = CLLFlashFirmware(data, BUpload.spi_hex_size);
+      }
+#endif  // SHELLY_FW_UPGRADE
+#ifdef USE_ZIGBEE_EZSP
+      if (UPL_EFR32 == Web.upload_file_type) {
+        BUpload.ready = true;  // So we know on upload success page if it needs to flash hex or do a normal restart
+      }
+#endif  // USE_ZIGBEE_EZSP
+      if (error != 0) {
+//        AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_UPLOAD "Transfer error %d"), error);
+        Web.upload_error = error + (100 * Web.upload_file_type);  // Add offset to discriminate transfer errors
         return;
       }
-      if (!VersionCompatible()) {
-        Web.upload_error = 14;  // Not compatible
-        return;
-      }
     }
-    if (!Web.upload_error) {
-      AddLog_P2(LOG_LEVEL_INFO, PSTR(D_LOG_UPLOAD D_SUCCESSFUL " %u bytes"), upload.totalSize);
+#endif  // USE_WEB_FW_UPGRADE
+    else if (!Update.end(true)) { // true to set the size to the current progress
+      if (_serialoutput) { Update.printError(Serial); }
+      Web.upload_error = 6;  // Upload failed. Enable logging 3
+      return;
     }
+    AddLog_P(LOG_LEVEL_INFO, PSTR(D_LOG_UPLOAD D_SUCCESSFUL " %u bytes"), upload.totalSize);
   }
 
   // ***** Step4: Abort upload file
   else if (UPLOAD_FILE_ABORTED == upload.status) {
-    restart_flag = 0;
+    TasmotaGlobal.restart_flag = 0;
     MqttRetryCounter(0);
 #ifdef USE_COUNTER
     CounterInterruptDisable(false);
@@ -3076,11 +3017,11 @@ void HandleHttpCommand(void)
   }
 
   WSContentBegin(200, CT_JSON);
-  uint32_t curridx = web_log_index;
+  uint32_t curridx = TasmotaGlobal.web_log_index;
   String svalue = Webserver->arg("cmnd");
   if (svalue.length() && (svalue.length() < MQTT_MAX_PACKET_SIZE)) {
     ExecuteWebCommand((char*)svalue.c_str(), SRC_WEBCOMMAND);
-    if (web_log_index != curridx) {
+    if (TasmotaGlobal.web_log_index != curridx) {
       uint32_t counter = curridx;
       WSContentSend_P(PSTR("{"));
       bool cflg = false;
@@ -3093,7 +3034,7 @@ void HandleHttpCommand(void)
           char* JSON = (char*)memchr(tmp, '{', len);
           if (JSON) { // Is it a JSON message (and not only [15:26:08 MQT: stat/wemos5/POWER = O])
             size_t JSONlen = len - (JSON - tmp);
-            if (JSONlen > sizeof(mqtt_data)) { JSONlen = sizeof(mqtt_data); }
+            if (JSONlen > sizeof(TasmotaGlobal.mqtt_data)) { JSONlen = sizeof(TasmotaGlobal.mqtt_data); }
             char stemp[JSONlen];
             strlcpy(stemp, JSON +1, JSONlen -2);
             WSContentSend_P(PSTR("%s%s"), (cflg) ? "," : "", stemp);
@@ -3103,7 +3044,7 @@ void HandleHttpCommand(void)
         counter++;
         counter &= 0xFF;
         if (!counter) counter++;  // Skip 0 as it is not allowed
-      } while (counter != web_log_index);
+      } while (counter != TasmotaGlobal.web_log_index);
       WSContentSend_P(PSTR("}"));
     } else {
       WSContentSend_P(PSTR("{\"" D_RSLT_WARNING "\":\"" D_ENABLE_WEBLOG_FOR_RESPONSE "\"}"));
@@ -3125,9 +3066,9 @@ void HandleConsole(void)
     return;
   }
 
-  AddLog_P(LOG_LEVEL_DEBUG, S_LOG_HTTP, S_CONSOLE);
+  AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP D_CONSOLE));
 
-  WSContentStart_P(S_CONSOLE);
+  WSContentStart_P(PSTR(D_CONSOLE));
   WSContentSend_P(HTTP_SCRIPT_CONSOL, Settings.web_refresh);
   WSContentSendStyle();
   WSContentSend_P(HTTP_FORM_CMND);
@@ -3142,7 +3083,7 @@ void HandleConsoleRefresh(void)
 
   String svalue = Webserver->arg("c1");
   if (svalue.length() && (svalue.length() < MQTT_MAX_PACKET_SIZE)) {
-    AddLog_P2(LOG_LEVEL_INFO, PSTR(D_LOG_COMMAND "%s"), svalue.c_str());
+    AddLog_P(LOG_LEVEL_INFO, PSTR(D_LOG_COMMAND "%s"), svalue.c_str());
     ExecuteWebCommand((char*)svalue.c_str(), SRC_WEBCONSOLE);
   }
 
@@ -3151,14 +3092,14 @@ void HandleConsoleRefresh(void)
   if (strlen(stmp)) { counter = atoi(stmp); }
 
   WSContentBegin(200, CT_PLAIN);
-  WSContentSend_P(PSTR("%d}1%d}1"), web_log_index, Web.reset_web_log_flag);
+  WSContentSend_P(PSTR("%d}1%d}1"), TasmotaGlobal.web_log_index, Web.reset_web_log_flag);
   if (!Web.reset_web_log_flag) {
     counter = 0;
     Web.reset_web_log_flag = true;
   }
-  if (counter != web_log_index) {
+  if (counter != TasmotaGlobal.web_log_index) {
     if (!counter) {
-      counter = web_log_index;
+      counter = TasmotaGlobal.web_log_index;
       cflg = false;
     }
     do {
@@ -3166,7 +3107,7 @@ void HandleConsoleRefresh(void)
       size_t len;
       GetLog(counter, &tmp, &len);
       if (len) {
-        if (len > sizeof(mqtt_data) -2) { len = sizeof(mqtt_data); }
+        if (len > sizeof(TasmotaGlobal.mqtt_data) -2) { len = sizeof(TasmotaGlobal.mqtt_data); }
         char stemp[len +1];
         strlcpy(stemp, tmp, len);
         WSContentSend_P(PSTR("%s%s"), (cflg) ? "\n" : "", stemp);
@@ -3175,7 +3116,7 @@ void HandleConsoleRefresh(void)
       counter++;
       counter &= 0xFF;
       if (!counter) { counter++; }  // Skip log index 0 as it is not allowed
-    } while (counter != web_log_index);
+    } while (counter != TasmotaGlobal.web_log_index);
   }
   WSContentSend_P(PSTR("}1"));
   WSContentEnd();
@@ -3185,7 +3126,7 @@ void HandleConsoleRefresh(void)
 
 void HandleNotFound(void)
 {
-//  AddLog_P2(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP "Not found (%s)"), Webserver->uri().c_str());
+//  AddLog_P(LOG_LEVEL_DEBUG, PSTR(D_LOG_HTTP "Not found (%s)"), Webserver->uri().c_str());
 
   if (CaptivePortal()) { return; }  // If captive portal redirect instead of displaying the error page.
 
@@ -3311,11 +3252,11 @@ int WebSend(char *buffer)
           while (text != '\0') {
             text = *read++;
             if (text > 31) {                  // Remove control characters like linefeed
-              mqtt_data[j++] = text;
-              if (j == sizeof(mqtt_data) -2) { break; }
+              TasmotaGlobal.mqtt_data[j++] = text;
+              if (j == sizeof(TasmotaGlobal.mqtt_data) -2) { break; }
             }
           }
-          mqtt_data[j] = '\0';
+          TasmotaGlobal.mqtt_data[j] = '\0';
           MqttPublishPrefixTopic_P(RESULT_OR_STAT, PSTR(D_CMND_WEBSEND));
 #ifdef USE_SCRIPT
 extern uint8_t tasm_cmd_activ;
@@ -3402,7 +3343,7 @@ void CmndEmulation(void)
 #endif
 #endif
     Settings.flag2.emulation = XdrvMailbox.payload;
-    restart_flag = 2;
+    TasmotaGlobal.restart_flag = 2;
   }
 #endif
   ResponseCmndNumber(Settings.flag2.emulation);
@@ -3472,7 +3413,7 @@ void CmndWebSend(void)
 void CmndWebColor(void)
 {
   if (XdrvMailbox.data_len > 0) {
-    if (strstr(XdrvMailbox.data, "{") == nullptr) {  // If no JSON it must be parameter
+    if (strchr(XdrvMailbox.data, '{') == nullptr) {  // If no JSON it must be parameter
       if ((XdrvMailbox.data_len > 3) && (XdrvMailbox.index > 0) && (XdrvMailbox.index <= COL_LAST)) {
         WebHexCode(XdrvMailbox.index -1, XdrvMailbox.data);
       }

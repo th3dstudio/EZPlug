@@ -1,7 +1,7 @@
 /*
   it-IT.h - localization for Italian - Italy for Tasmota
 
-  Copyright (C) 2020 Gennaro Tortone - some mods by Antonio Fragola - Updated by bovirus - rev. 05.09.2020
+  Copyright (C) 2020 Gennaro Tortone - some mods by Antonio Fragola - Updated by bovirus - rev. 21.12.2020
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -84,8 +84,10 @@
 #define D_DISABLED "Disabilitato/a"
 #define D_DISTANCE "Distanza"
 #define D_DNS_SERVER "Server DNS"
+#define D_DO "Ossigeno dissolto"
 #define D_DONE "Completato"
 #define D_DST_TIME "DST"
+#define D_EC "EC"
 #define D_ECO2 "eCO₂"
 #define D_EMULATION "Tipo emulazione"
 #define D_ENABLED "Abilitato"
@@ -124,12 +126,15 @@
 #define D_MULTI_PRESS "multi-pressione"
 #define D_NOISE "Rumore"
 #define D_NONE "Nessuno"
+#define D_O2 "Ossigeno"
 #define D_OFF "OFF"
 #define D_OFFLINE "Offline"
 #define D_OK "OK"
 #define D_ON "ON"
 #define D_ONLINE "Online"
+#define D_ORP "ORP"
 #define D_PASSWORD "Password"
+#define D_PH "pH"
 #define D_PORT "Porta"
 #define D_POWER_FACTOR "Fattore di potenza"
 #define D_POWERUSAGE "Potenza"
@@ -187,6 +192,7 @@
 #define D_UV_POWER "Intensità UV"
 #define D_VERSION "Versione"
 #define D_VOLTAGE "Tensione"
+#define D_VOLUME "Volume"
 #define D_WEIGHT "Peso"
 #define D_WARMLIGHT "Calda"
 #define D_WEB_SERVER "Server web"
@@ -355,7 +361,7 @@
 #define D_TRANSFER_STARTED "Trasferimento avviato"
 #define D_UPLOAD_ERR_1 "Nessun file selezionato"
 #define D_UPLOAD_ERR_2 "Spazio insufficiente"
-#define D_UPLOAD_ERR_3 "Magic byte non corrispondente a 0xE9"
+#define D_UPLOAD_ERR_3 "Firma file non valida"
 #define D_UPLOAD_ERR_4 "Dimensione memoria programma maggiore della dimensione reale della flash"
 #define D_UPLOAD_ERR_5 "Errore comparazione buffer upload"
 #define D_UPLOAD_ERR_6 "Invio fallito. Abilita registrazione logging 3"
@@ -427,7 +433,7 @@
 #define D_TIMER_TIME "Ora"
 #define D_TIMER_DAYS "Giorni"
 #define D_TIMER_REPEAT "Ripeti"
-#define D_TIMER_OUTPUT "Output"
+#define D_TIMER_OUTPUT "Uscita"
 #define D_TIMER_ACTION "Azione"
 
 // xdrv_10_knx.ino
@@ -469,8 +475,8 @@
 #define D_PCF8574_PARAMETERS "Parametri PCF8574"
 #define D_INVERT_PORTS "Inverti porte"
 #define D_DEVICE "Dispositivo"
-#define D_DEVICE_INPUT "Input"
-#define D_DEVICE_OUTPUT "Output"
+#define D_DEVICE_INPUT "Ingresso"
+#define D_DEVICE_OUTPUT "Uscita"
 
 // xsns_05_ds18b20.ino
 #define D_SENSOR_BUSY "Sensore occupato"
@@ -554,7 +560,8 @@
 
 // tasmota_template.h - keep them as short as possible to be able to fit them in GUI drop down box
 #define D_SENSOR_NONE          "Nessuno"
-#define D_SENSOR_USER          "User"
+#define D_SENSOR_USER          "Utente"
+#define D_SENSOR_OPTION        "Opzioni"
 #define D_SENSOR_DHT11         "DHT11"
 #define D_SENSOR_AM2301        "AM2301"
 #define D_SENSOR_SI7021        "SI7021"
@@ -600,6 +607,8 @@
 #define D_SENSOR_SDM120_RX     "SDMx20 - RX"
 #define D_SENSOR_SDM630_TX     "SDM630 - TX"
 #define D_SENSOR_SDM630_RX     "SDM630 - RX"
+#define D_SENSOR_WE517_TX      "WE517 - TX"
+#define D_SENSOR_WE517_RX      "WE517 - RX"
 #define D_SENSOR_TM1638_CLK    "TM16 - CLK"
 #define D_SENSOR_TM1638_DIO    "TM16 - DIO"
 #define D_SENSOR_TM1638_STB    "TM16 - STB"
@@ -638,13 +647,15 @@
 #define D_SENSOR_SM16716_CLK   "SM16716 - CLK"
 #define D_SENSOR_SM16716_DAT   "SM16716 - DAT"
 #define D_SENSOR_SM16716_POWER "SM16716 - PWR"
+#define D_SENSOR_P9813_CLK     "P9813 - CLK"
+#define D_SENSOR_P9813_DAT     "P9813 - DAT"
 #define D_SENSOR_MY92X1_DI     "MY92x1 - DI"
 #define D_SENSOR_MY92X1_DCKI   "MY92x1 - DCKI"
 #define D_SENSOR_ARIRFRCV      "IR ALux - RCV"
 #define D_SENSOR_ARIRFSEL      "IR ALux - SEL"
 #define D_SENSOR_TXD           "Seriale - TX"
 #define D_SENSOR_RXD           "Seriale - RX"
-#define D_SENSOR_ROTARY        "Rotary"     // Suffix "1A"
+#define D_SENSOR_ROTARY        "Rotativo"     // Suffix "1A"
 #define D_SENSOR_HRE_CLOCK     "HRE - Clock"
 #define D_SENSOR_HRE_DATA      "HRE - Dati"
 #define D_SENSOR_ADE7953_IRQ   "ADE7953 - IRQ"
@@ -663,15 +674,17 @@
 #define D_SENSOR_A4988_STP     "A4988 - STP"
 #define D_SENSOR_A4988_ENA     "A4988 - ENA"
 #define D_SENSOR_A4988_MS1     "A4988 - MS1"
-#define D_SENSOR_A4988_MS2     "A4988 - MS2"
-#define D_SENSOR_A4988_MS3     "A4988 - MS3"
+#define D_SENSOR_OUTPUT_HI     "Uscita - Hi"
+#define D_SENSOR_OUTPUT_LO     "Uscita - Lo"
+#define D_SENSOR_AS608_TX      "AS608 - TX"
+#define D_SENSOR_AS608_RX      "AS608 - RX"
 #define D_SENSOR_DDS2382_TX    "DDS238-2 - TX"
 #define D_SENSOR_DDS2382_RX    "DDS238-2 - RX"
 #define D_SENSOR_DDSU666_TX    "DDSU666 - TX"
 #define D_SENSOR_DDSU666_RX    "DDSU666 - RX"
 #define D_SENSOR_SM2135_CLK    "SM2135 - CLK"
 #define D_SENSOR_SM2135_DAT    "SM2135 - DATI"
-#define D_SENSOR_DEEPSLEEP     "Deep sleep"
+#define D_SENSOR_DEEPSLEEP     "Sleep profondo"
 #define D_SENSOR_EXS_ENABLE    "EXS - Abilita"
 #define D_SENSOR_CLIENT_TX     "Client - TX"
 #define D_SENSOR_CLIENT_RX     "Client - RX"
@@ -691,34 +704,39 @@
 #define D_SENSOR_AS3935         "AS3935"
 #define D_SENSOR_WINDMETER_SPEED "Velocità vento"
 #define D_SENSOR_TELEINFO_RX    "TInfo - RX"
-#define D_SENSOR_TELEINFO_ENABLE "TInfo - EN"
-#define D_SENSOR_LMT01_PULSE   "LMT01 Pulse"
-#define D_SENSOR_ADC_INPUT     "ADC Input"
-#define D_SENSOR_ADC_TEMP      "ADC Temp"
-#define D_SENSOR_ADC_LIGHT     "ADC Light"
-#define D_SENSOR_ADC_BUTTON    "ADC Button"
-#define D_SENSOR_ADC_RANGE     "ADC Range"
-#define D_SENSOR_ADC_CT_POWER  "ADC CT Power"
-#define D_SENSOR_ADC_JOYSTICK  "ADC Joystick"
-#define D_GPIO_WEBCAM_PWDN     "CAM_PWDN"
-#define D_GPIO_WEBCAM_RESET    "CAM_RESET"
-#define D_GPIO_WEBCAM_XCLK     "CAM_XCLK"
-#define D_GPIO_WEBCAM_SIOD     "CAM_SIOD"
-#define D_GPIO_WEBCAM_SIOC     "CAM_SIOC"
-#define D_GPIO_WEBCAM_DATA     "CAM_DATA"
-#define D_GPIO_WEBCAM_VSYNC    "CAM_VSYNC"
-#define D_GPIO_WEBCAM_HREF     "CAM_HREF"
-#define D_GPIO_WEBCAM_PCLK     "CAM_PCLK"
-#define D_GPIO_WEBCAM_PSCLK    "CAM_PSCLK"
-#define D_GPIO_WEBCAM_HSD      "CAM_HSD"
-#define D_GPIO_WEBCAM_PSRCS    "CAM_PSRCS"
-#define D_SENSOR_ETH_PHY_POWER "ETH POWER"
-#define D_SENSOR_ETH_PHY_MDC   "ETH MDC"
-#define D_SENSOR_ETH_PHY_MDIO  "ETH MDIO"
+#define D_SENSOR_TELEINFO_ENABLE "TInfo - Abilita"
+#define D_SENSOR_LMT01_PULSE   "LMT01 - Impulso"
+#define D_SENSOR_ADC_INPUT     "ADC - Ingresso"
+#define D_SENSOR_ADC_TEMP      "ADC - Temperatura"
+#define D_SENSOR_ADC_LIGHT     "ADC - Luce"
+#define D_SENSOR_ADC_BUTTON    "ADC - Pulsante"
+#define D_SENSOR_ADC_RANGE     "ADC - Intervallo"
+#define D_SENSOR_ADC_CT_POWER  "ADC - CTR alimentazione"
+#define D_SENSOR_ADC_JOYSTICK  "ADC - Joystick"
+#define D_GPIO_WEBCAM_PWDN     "Webcam - PWDN"
+#define D_GPIO_WEBCAM_RESET    "Webcam - RESET"
+#define D_GPIO_WEBCAM_XCLK     "Webcam - XCLK"
+#define D_GPIO_WEBCAM_SIOD     "Webcam - SIOD"
+#define D_GPIO_WEBCAM_SIOC     "Webcam - SIOC"
+#define D_GPIO_WEBCAM_DATA     "Webcam - DATA"
+#define D_GPIO_WEBCAM_VSYNC    "Webcam - VSYNC"
+#define D_GPIO_WEBCAM_HREF     "Webcam - HREF"
+#define D_GPIO_WEBCAM_PCLK     "Webcam - PCLK"
+#define D_GPIO_WEBCAM_PSCLK    "Webcam - PSCLK"
+#define D_GPIO_WEBCAM_HSD      "Webcam - HSD"
+#define D_GPIO_WEBCAM_PSRCS    "Webcam - PSRCS"
+#define D_SENSOR_ETH_PHY_POWER "ETH - ALIMENTAZIONE"
+#define D_SENSOR_ETH_PHY_MDC   "ETH - MDC"
+#define D_SENSOR_ETH_PHY_MDIO  "ETH - MDIO"
 #define D_SENSOR_TCP_TXD       "TCP - TX"
 #define D_SENSOR_TCP_RXD       "TCP - RX"
 #define D_SENSOR_IEM3000_TX    "iEM3000 - TX"
 #define D_SENSOR_IEM3000_RX    "iEM3000 - RX"
+#define D_SENSOR_MIEL_HVAC_TX  "MiEl HVAC - TX"
+#define D_SENSOR_MIEL_HVAC_RX  "MiEl HVAC - RX"
+#define D_SENSOR_SHELLY_DIMMER_BOOT0 "SHD - Boot 0"
+#define D_SENSOR_SHELLY_DIMMER_RST_INV "SHD - Reset"
+#define D_SENSOR_RC522_RST     "RC522 - Reset"
 
 // Units
 #define D_UNIT_AMPERE "A"
@@ -737,14 +755,19 @@
 #define D_UNIT_KILOMETER_PER_HOUR "km/h"  // or "km/h"
 #define D_UNIT_KILOOHM "kΩ"
 #define D_UNIT_KILOWATTHOUR "kWh"
+#define D_UNIT_LITERS "L"
+#define D_UNIT_LITERS_PER_MIN "L/m"
 #define D_UNIT_LUX "lx"
 #define D_UNIT_MICROGRAM_PER_CUBIC_METER "µg/m³"
 #define D_UNIT_MICROMETER "µm"
 #define D_UNIT_MICROSECOND "µs"
+#define D_UNIT_MICROSIEMENS_PER_CM "µS/cm"
 #define D_UNIT_MILLIAMPERE "mA"
+#define D_UNIT_MILLILITERS "ml"
 #define D_UNIT_MILLIMETER "mm"
 #define D_UNIT_MILLIMETER_MERCURY "mmHg"
 #define D_UNIT_MILLISECOND "ms"
+#define D_UNIT_MILLIVOLT "mV"
 #define D_UNIT_MINUTE "Min"
 #define D_UNIT_PARTS_PER_BILLION "ppb"
 #define D_UNIT_PARTS_PER_DECILITER "ppd"
@@ -779,7 +802,7 @@
 #define D_PV2_CURRENT     "PV2 - Corrente"
 #define D_PV2_POWER       "PV2 - Energia"
 #define D_SOLAR_POWER     "Energia solare"
-#define D_INVERTER_POWER  "Energia inverter"
+#define D_INVERTER_POWER  "Potenza inverter"
 #define D_STATUS          "Stato"
 #define D_WAITING         "In attesa"
 #define D_CHECKING        "Controllo"
@@ -845,5 +868,39 @@
 #define D_OVERLOAD        "ADPS"
 #define D_MAX_POWER       "Potenza max"
 #define D_MAX_CURRENT     "Corrente max"
+
+// xsns_79_as608.ino
+#define D_FP_ENROLL_PLACEFINGER "Appoggia impronta"
+#define D_FP_ENROLL_REMOVEFINGER "Rimuovi impronta"
+#define D_FP_ENROLL_PLACESAMEFINGER "Appoggia di nuovo stessa impronta"
+#define D_FP_ENROLL_RETRY "Errore quindi riprova"
+#define D_FP_ENROLL_RESTART "Riavvia"
+#define D_FP_ENROLL_ERROR "Errore"
+#define D_FP_ENROLL_RESET "Ripristina"
+#define D_FP_ENROLL_ACTIVE "Attivo"
+#define D_FP_ENROLL_INACTIVE "Non attivo"
+// Indexed by Adafruit_Fingerprint.h defines
+#define D_FP_PACKETRECIEVEERR "Errore comunicazione"        // 0x01 Error when receiving data package
+#define D_FP_NOFINGER ""                                    // 0x02 No finger on the sensor
+#define D_FP_IMAGEFAIL "Errore immagine"                    // 0x03 Failed to enroll the finger
+#define D_FP_IMAGEMESS "Immmagine troppo danneggiata"       // 0x06 Failed to generate character file due to overly disorderly fingerprint image
+#define D_FP_FEATUREFAIL "Impronta troppo piccola"          // 0x07 Failed to generate character file due to the lack of character point or small fingerprint image
+#define D_FP_NOMATCH "Nessuna corrispondenza"               // 0x08 Finger doesn't match
+#define D_FP_NOTFOUND "Corrispondenza non trovata"          // 0x09 Failed to find matching finger
+#define D_FP_ENROLLMISMATCH "L'impronta non corrisponde"    // 0x0A Failed to combine the character files
+#define D_FP_BADLOCATION "Locazione errata"                 // 0x0B Addressed PageID is beyond the finger library
+#define D_FP_DBRANGEFAIL "Errore intervallo DB"             // 0x0C Error when reading template from library or invalid template
+#define D_FP_UPLOADFEATUREFAIL "Errore funzione upload"     // 0x0D Error when uploading template
+#define D_FP_PACKETRESPONSEFAIL "Errore risposta pacchetto" // 0x0E Module failed to receive the following data packages
+#define D_FP_UPLOADFAIL "Errore upload"                     // 0x0F Error when uploading image
+#define D_FP_DELETEFAIL "Errore eliminazione"               // 0x10 Failed to delete the template
+#define D_FP_DBCLEARFAIL "Errore azzeramento DB"            // 0x11 Failed to clear finger library
+#define D_FP_PASSFAIL "Errore password"                     // 0x13 Find whether the fingerprint passed or failed
+#define D_FP_INVALIDIMAGE "Immagine non valida"             // 0x15 Failed to generate image because of lac of valid primary image
+#define D_FP_FLASHERR "Errore scrittura flash"              // 0x18 Error when writing flash
+#define D_FP_INVALIDREG "Numero non valido"                 // 0x1A Invalid register number
+#define D_FP_ADDRCODE "Codice indirizzo"                    // 0x20 Address code
+#define D_FP_PASSVERIFY "Password verificata"               // 0x21 Verify the fingerprint passed
+#define D_FP_UNKNOWNERROR "Errore"                          // Any other error
 
 #endif  // _LANGUAGE_IT_IT_H_

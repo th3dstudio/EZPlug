@@ -28,7 +28,8 @@
 | USE_EXPRESSION        | - | - | - | - | - | - | - |
 | SUPPORT_IF_STATEMENT  | - | - | - | - | - | - | - |
 | USE_HOTPLUG           | - | - | - | - | - | - | - |
-| USE_PROMETHEUS        | - | - | - | - | - | - | - | Enables the `/metrics` endpoint
+| USE_PROMETHEUS        | - | - | - | - | - | - | - |
+| USE_PING              | - | - | - | - | - | - | - |
 |                       |   |   |   |   |   |   |   |
 | Feature or Sensor     | minimal | lite | tasmota | knx | sensors | ir | display | Remarks
 | ROTARY_V1             | - | - | x | - | x | - | - |
@@ -48,6 +49,7 @@
 | USE_PWM_DIMMER        | - | - | x | x | - | - | - |
 | USE_KEELOQ            | - | - | - | - | - | - | - |
 | USE_SONOFF_D1         | - | - | x | x | - | - | - |
+| USE_SHELLY_DIMMER     | - | - | - | - | - | - | - |
 |                       |   |   |   |   |   |   |   |
 | Feature or Sensor     | minimal | lite | tasmota | knx | sensors | ir | display | Remarks
 | USE_LIGHT             | - | x | x | x | x | x | x |
@@ -73,6 +75,7 @@
 | USE_BL0940            | - | x | x | x | x | - | - |
 | USE_TELEINFO          | - | - | - | - | - | - | - |
 | USE_IEM3000           | - | - | - | - | - | - | - |
+| USE_WE517             | - | - | - | - | - | - | - |
 |                       |   |   |   |   |   |   |   |
 | USE_ADC_VCC           | x | x | - | - | - | x | - |
 | USE_COUNTER           | - | - | x | x | x | - | x |
@@ -118,6 +121,8 @@
 | USE_CHIRP             | - | - | - | - | - | - | - |
 | USE_PAJ7620           | - | - | - | - | - | - | - |
 | USE_PCF8574           | - | - | - | - | - | - | - |
+|                       |   |   |   |   |   |   |   |
+| Feature or Sensor     | minimal | lite | tasmota | knx | sensors | ir | display | Remarks
 | USE_HIH6              | - | - | - | - | x | - | - |
 | USE_DHT12             | - | - | - | - | x | - | - |
 | USE_DS1624            | - | - | - | - | x | - | - |
@@ -130,9 +135,22 @@
 | USE_VEML7700          | - | - | - | - | - | - | - |
 | USE_MCP9808           | - | - | - | - | - | - | - |
 | USE_HP303B            | - | - | - | - | - | - | - |
+| USE_EZOCO2            | - | - | - | - | - | - | - |
+| USE_EZODO             | - | - | - | - | - | - | - |
+| USE_EZOEC             | - | - | - | - | - | - | - |
+| USE_EZOFLO            | - | - | - | - | - | - | - |
+| USE_EZOHUM            | - | - | - | - | - | - | - |
+| USE_EZOO2             | - | - | - | - | - | - | - |
+| USE_EZOORP            | - | - | - | - | - | - | - |
+| USE_EZOPH             | - | - | - | - | - | - | - |
+| USE_EZOPMP            | - | - | - | - | - | - | - |
+| USE_EZOPRS            | - | - | - | - | - | - | - |
+| USE_EZORGB            | - | - | - | - | - | - | - |
+| USE_EZORTD            | - | - | - | - | - | - | - |
 |                       |   |   |   |   |   |   |   |
 | Feature or Sensor     | minimal | lite | tasmota | knx | sensors | ir | display | Remarks
 | USE_SPI               | - | - | - | - | - | - | x |
+| USE_RC522             | - | - | - | - | - | - | - |
 | USE_MHZ19             | - | - | - | - | x | - | - |
 | USE_SENSEAIR          | - | - | - | - | x | - | - |
 | USE_PMS5003           | - | - | - | - | x | - | - |
@@ -149,6 +167,8 @@
 | USE_HRXL              | - | - | - | - | x | - | - |
 | USE_TASMOTA_CLIENT    | - | - | - | - | - | - | - |
 | USE_OPENTHERM         | - | - | - | - | - | - | - |
+| USE_MIEL_HVAC         | - | - | - | - | - | - | - |
+| USE_AS608             | - | - | - | - | - | - | - |
 | USE_TCP_BRIDGE        | - | - | - | - | - | - | - | zbbridge
 |                       |   |   |   |   |   |   |   |
 | USE_NRF24             | - | - | - | - | - | - | - |

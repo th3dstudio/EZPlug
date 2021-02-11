@@ -28,7 +28,7 @@
  * Use online command StateText to translate ON, OFF, HOLD and TOGGLE.
  * Use online command Prefix to translate cmnd, stat and tele.
  *
- * Updated until v8.4.0.3
+ * Updated until v9.1.0.2
 \*********************************************************************/
 
 #define LANGUAGE_MODULE_NAME         // Enable to display "Module Generic" (ie Spanish), Disable to display "Generic Module" (ie English)
@@ -84,8 +84,10 @@
 #define D_DISABLED "Deshabilitado"
 #define D_DISTANCE "Distancia"
 #define D_DNS_SERVER "Servidor DNS"
+#define D_DO "Oxígeno Disuelto"
 #define D_DONE "Listo"
 #define D_DST_TIME "DST"
+#define D_EC "EC"
 #define D_ECO2 "eCO₂"
 #define D_EMULATION "Emulación"
 #define D_ENABLED "Habilitado"
@@ -124,12 +126,15 @@
 #define D_MULTI_PRESS "multi-press"
 #define D_NOISE "Ruido"
 #define D_NONE "Ninguno"
+#define D_O2 "Oxygen"
 #define D_OFF "Apagado"
 #define D_OFFLINE "Offline"
 #define D_OK "Ok"
 #define D_ON "Encendido"
 #define D_ONLINE "Online"
+#define D_ORP "ORP"
 #define D_PASSWORD "Clave"
+#define D_PH "pH"
 #define D_PORT "Puerto"
 #define D_POWER_FACTOR "Factor de Potencia"
 #define D_POWERUSAGE "Potencia"
@@ -187,6 +192,7 @@
 #define D_UV_POWER "UV Power"
 #define D_VERSION "Versión"
 #define D_VOLTAGE "Tensión"
+#define D_VOLUME "Volume"
 #define D_WEIGHT "Peso"
 #define D_WARMLIGHT "Cálida"
 #define D_WEB_SERVER "Servidor Web"
@@ -355,7 +361,7 @@
 #define D_TRANSFER_STARTED "Transfer started"
 #define D_UPLOAD_ERR_1 "Ningún archivo seleccionado"
 #define D_UPLOAD_ERR_2 "Espacio insuficiente"
-#define D_UPLOAD_ERR_3 "Magic byte no corresponde a 0xE9"
+#define D_UPLOAD_ERR_3 "Invalid file signature"
 #define D_UPLOAD_ERR_4 "El tamaño de la memoria de programa es mayor que la de la flash"
 #define D_UPLOAD_ERR_5 "Error de comparación del buffer de carga"
 #define D_UPLOAD_ERR_6 "Carga fallida. Habilitar logging 3"
@@ -407,16 +413,16 @@
 #define D_DOMOTICZ_KEY_IDX "Key idx"
 #define D_DOMOTICZ_SWITCH_IDX "Switch idx"
 #define D_DOMOTICZ_SENSOR_IDX "Sensor idx"
-  #define D_DOMOTICZ_TEMP "Temp"
-  #define D_DOMOTICZ_TEMP_HUM "Temp,Hum"
-  #define D_DOMOTICZ_TEMP_HUM_BARO "Temp,Hum,Baro"
-  #define D_DOMOTICZ_POWER_ENERGY "Potencia,Energía"
-  #define D_DOMOTICZ_ILLUMINANCE "Luminancia"
-  #define D_DOMOTICZ_COUNT "Contador/PM1"
-  #define D_DOMOTICZ_VOLTAGE "Voltaje/PM2,5"
-  #define D_DOMOTICZ_CURRENT "Corriente/PM10"
-  #define D_DOMOTICZ_AIRQUALITY "Calidad del Aire"
-  #define D_DOMOTICZ_P1_SMART_METER "Medidor Inteligente P1"
+#define D_DOMOTICZ_TEMP "Temp"
+#define D_DOMOTICZ_TEMP_HUM "Temp,Hum"
+#define D_DOMOTICZ_TEMP_HUM_BARO "Temp,Hum,Baro"
+#define D_DOMOTICZ_POWER_ENERGY "Potencia,Energía"
+#define D_DOMOTICZ_ILLUMINANCE "Luminancia"
+#define D_DOMOTICZ_COUNT "Contador/PM1"
+#define D_DOMOTICZ_VOLTAGE "Voltaje/PM2,5"
+#define D_DOMOTICZ_CURRENT "Corriente/PM10"
+#define D_DOMOTICZ_AIRQUALITY "Calidad del Aire"
+#define D_DOMOTICZ_P1_SMART_METER "Medidor Inteligente P1"
 #define D_DOMOTICZ_UPDATE_TIMER "Intervalo de refresco"
 
 // xdrv_09_timers.ino
@@ -600,6 +606,8 @@
 #define D_SENSOR_SDM120_RX     "SDMx20 Rx"
 #define D_SENSOR_SDM630_TX     "SDM630 Tx"
 #define D_SENSOR_SDM630_RX     "SDM630 Rx"
+#define D_SENSOR_WE517_TX      "WE517 Tx"
+#define D_SENSOR_WE517_RX      "WE517 Rx"
 #define D_SENSOR_TM1638_CLK    "TM16 CLK"
 #define D_SENSOR_TM1638_DIO    "TM16 DIO"
 #define D_SENSOR_TM1638_STB    "TM16 STB"
@@ -663,8 +671,10 @@
 #define D_SENSOR_A4988_STP     "A4988 STP"
 #define D_SENSOR_A4988_ENA     "A4988 ENA"
 #define D_SENSOR_A4988_MS1     "A4988 MS1"
-#define D_SENSOR_A4988_MS2     "A4988 MS2"
-#define D_SENSOR_A4988_MS3     "A4988 MS3"
+#define D_SENSOR_OUTPUT_HI     "Output Hi"
+#define D_SENSOR_OUTPUT_LO     "Output Lo"
+#define D_SENSOR_AS608_TX      "AS608 Tx"
+#define D_SENSOR_AS608_RX      "AS608 Rx"
 #define D_SENSOR_DDS2382_TX    "DDS238-2 Tx"
 #define D_SENSOR_DDS2382_RX    "DDS238-2 Rx"
 #define D_SENSOR_DDSU666_TX    "DDSU666 Tx"
@@ -719,6 +729,11 @@
 #define D_SENSOR_TCP_RXD       "TCP Rx"
 #define D_SENSOR_IEM3000_TX    "iEM3000 TX"
 #define D_SENSOR_IEM3000_RX    "iEM3000 RX"
+#define D_SENSOR_MIEL_HVAC_TX  "MiEl HVAC Tx"
+#define D_SENSOR_MIEL_HVAC_RX  "MiEl HVAC Rx"
+#define D_SENSOR_SHELLY_DIMMER_BOOT0 "SHD Boot 0"
+#define D_SENSOR_SHELLY_DIMMER_RST_INV "SHD Reset"
+#define D_SENSOR_RC522_RST     "RC522 Rst"
 
 // Units
 #define D_UNIT_AMPERE "A"
@@ -737,14 +752,19 @@
 #define D_UNIT_KILOMETER_PER_HOUR "km/h"  // or "km/h"
 #define D_UNIT_KILOOHM "kΩ"
 #define D_UNIT_KILOWATTHOUR "kWh"
+#define D_UNIT_LITERS "L"
+#define D_UNIT_LITERS_PER_MIN "L/m"
 #define D_UNIT_LUX "lx"
 #define D_UNIT_MICROGRAM_PER_CUBIC_METER "µg/m³"
 #define D_UNIT_MICROMETER "µm"
 #define D_UNIT_MICROSECOND "µs"
+#define D_UNIT_MICROSIEMENS_PER_CM "µS/cm"
 #define D_UNIT_MILLIAMPERE "mA"
+#define D_UNIT_MILLILITERS "ml"
 #define D_UNIT_MILLIMETER "mm"
 #define D_UNIT_MILLIMETER_MERCURY "mmHg"
 #define D_UNIT_MILLISECOND "ms"
+#define D_UNIT_MILLIVOLT "mV"
 #define D_UNIT_MINUTE "Min"
 #define D_UNIT_PARTS_PER_BILLION "ppb"
 #define D_UNIT_PARTS_PER_DECILITER "ppd"
@@ -845,5 +865,39 @@
 #define D_OVERLOAD        "ADPS"
 #define D_MAX_POWER       "Potencia Máxima"
 #define D_MAX_CURRENT     "Corriente Máxima"
+
+// xsns_79_as608.ino
+#define D_FP_ENROLL_PLACEFINGER "Colocar dedo"
+#define D_FP_ENROLL_REMOVEFINGER "Retirar dedo"
+#define D_FP_ENROLL_PLACESAMEFINGER "Colocar de nuevo el mismo dedo"
+#define D_FP_ENROLL_RETRY "Error, reintentar"
+#define D_FP_ENROLL_RESTART "Reiniciar"
+#define D_FP_ENROLL_ERROR "Error"
+#define D_FP_ENROLL_RESET "Resetear"
+#define D_FP_ENROLL_ACTIVE "Activo"
+#define D_FP_ENROLL_INACTIVE "Inactivo"
+// Indexed by Adafruit_Fingerprint.h defines
+#define D_FP_PACKETRECIEVEERR "Error de Comms"    // 0x01 Error when receiving data package
+#define D_FP_NOFINGER ""                       // 0x02 No finger on the sensor
+#define D_FP_IMAGEFAIL "Error de Imagen"         // 0x03 Failed to enroll the finger
+#define D_FP_IMAGEMESS "Imagen Ilegible"       // 0x06 Failed to generate character file due to overly disorderly fingerprint image
+#define D_FP_FEATUREFAIL "Huella muy pequeña" // 0x07 Failed to generate character file due to the lack of character point or small fingerprint image
+#define D_FP_NOMATCH "Sin coincidencias"                // 0x08 Finger doesn't match
+#define D_FP_NOTFOUND "Sin coincidencias"   // 0x09 Failed to find matching finger
+#define D_FP_ENROLLMISMATCH "Sin coincidencias" // 0x0A Failed to combine the character files
+#define D_FP_BADLOCATION "Localización Incorrecta"        // 0x0B Addressed PageID is beyond the finger library
+#define D_FP_DBRANGEFAIL "Error de DB"      // 0x0C Error when reading template from library or invalid template
+#define D_FP_UPLOADFEATUREFAIL "Error de grabado" // 0x0D Error when uploading template
+#define D_FP_PACKETRESPONSEFAIL "Error de paquete" // 0x0E Module failed to receive the following data packages
+#define D_FP_UPLOADFAIL "Error de subida"         // 0x0F Error when uploading image
+#define D_FP_DELETEFAIL "No se pudo borrar"         // 0x10 Failed to delete the template
+#define D_FP_DBCLEARFAIL "No se pudo borra la DB"      // 0x11 Failed to clear finger library
+#define D_FP_PASSFAIL "Error de Clave"         // 0x13 Find whether the fingerprint passed or failed
+#define D_FP_INVALIDIMAGE "Imágen inválida"      // 0x15 Failed to generate image because of lac of valid primary image
+#define D_FP_FLASHERR "Error escribiendo en Flash"      // 0x18 Error when writing flash
+#define D_FP_INVALIDREG "Número inválido"       // 0x1A Invalid register number
+#define D_FP_ADDRCODE "Código de Dirección"           // 0x20 Address code
+#define D_FP_PASSVERIFY "Clave Correcta"    // 0x21 Verify the fingerprint passed
+#define D_FP_UNKNOWNERROR "Error"              // Any other error
 
 #endif  // _LANGUAGE_ES_ES_H_

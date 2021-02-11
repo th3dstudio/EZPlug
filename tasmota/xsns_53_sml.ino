@@ -86,6 +86,7 @@ struct METER_DESC {
   char *txmem;
   uint8_t index;
   uint8_t max_index;
+  uint8_t sopt;
 };
 
 // this descriptor method is no longer supported
@@ -107,9 +108,19 @@ struct METER_DESC {
 #define COMBO3b 12
 #define WGS_COMBO 13
 #define EBZD_G 14
+#define SML_NO_OP 15
 
 // select this meter
-#define METER EHZ161_1
+// SML_NO_OP ignores hardcoded interface
+#define METER SML_NO_OP
+//#define METER EHZ161_1
+
+#if METER==SML_NO_OP
+#undef METERS_USED
+#define METERS_USED 0
+struct METER_DESC const meter_desc[]={};
+const uint8_t meter[]="";
+#endif
 
 
 #if METER==EHZ161_0
@@ -460,11 +471,12 @@ const uint8_t *meter_p;
 uint8_t meter_spos[MAX_METERS];
 
 // software serial pointers
+#ifdef ESP8266
+TasmotaSerial *meter_ss[MAX_METERS];
+#endif  // ESP8266
 #ifdef ESP32
 HardwareSerial *meter_ss[MAX_METERS];
-#else
-TasmotaSerial *meter_ss[MAX_METERS];
-#endif
+#endif  // ESP32
 
 // serial buffers, may be made larger depending on telegram lenght
 #ifndef SML_BSIZ
@@ -763,7 +775,7 @@ ADS1115 adc;
 void ADS1115_init(void) {
 
   ads1115_up=0;
-  if (!i2c_flg) return;
+  if (!TasmotaGlobal.i2c_enabled) return;
 
   adc.begin();
   adc.set_data_rate(ADS1115_DATA_RATE_128_SPS);
@@ -818,31 +830,31 @@ uint8_t dchars[16];
   if (dump2log&8) {
     // combo mode
     while (SML_SAVAILABLE) {
-      log_data[index]=':';
+      TasmotaGlobal.log_data[index]=':';
       index++;
-      log_data[index]=' ';
+      TasmotaGlobal.log_data[index]=' ';
       index++;
       d_lastms=millis();
       while ((millis()-d_lastms)<40) {
         if (SML_SAVAILABLE) {
           uint8_t c=SML_SREAD;
-          sprintf(&log_data[index],"%02x ",c);
+          sprintf(&TasmotaGlobal.log_data[index],"%02x ",c);
           dchars[hcnt]=c;
           index+=3;
           hcnt++;
           if (hcnt>15) {
             // line complete, build asci chars
-            log_data[index]='=';
+            TasmotaGlobal.log_data[index]='=';
             index++;
-            log_data[index]='>';
+            TasmotaGlobal.log_data[index]='>';
             index++;
-            log_data[index]=' ';
+            TasmotaGlobal.log_data[index]=' ';
             index++;
             for (uint8_t ccnt=0; ccnt<16; ccnt++) {
               if (isprint(dchars[ccnt])) {
-                log_data[index]=dchars[ccnt];
+                TasmotaGlobal.log_data[index]=dchars[ccnt];
               } else {
-                log_data[index]=' ';
+                TasmotaGlobal.log_data[index]=' ';
               }
               index++;
             }
@@ -851,7 +863,7 @@ uint8_t dchars[16];
         }
       }
       if (index>0) {
-        log_data[index]=0;
+        TasmotaGlobal.log_data[index]=0;
         AddLog(LOG_LEVEL_INFO);
         index=0;
         hcnt=0;
@@ -863,24 +875,24 @@ uint8_t dchars[16];
       while (SML_SAVAILABLE) {
         char c=SML_SREAD&0x7f;
         if (c=='\n' || c=='\r') {
-          log_data[sml_logindex]=0;
+          TasmotaGlobal.log_data[sml_logindex]=0;
           AddLog(LOG_LEVEL_INFO);
           sml_logindex=2;
-          log_data[0]=':';
-          log_data[1]=' ';
+          TasmotaGlobal.log_data[0]=':';
+          TasmotaGlobal.log_data[1]=' ';
           break;
         }
-        log_data[sml_logindex]=c;
-        if (sml_logindex<sizeof(log_data)-2) {
+        TasmotaGlobal.log_data[sml_logindex]=c;
+        if (sml_logindex<sizeof(TasmotaGlobal.log_data)-2) {
           sml_logindex++;
         }
       }
     } else {
       //while (SML_SAVAILABLE) {
       index=0;
-      log_data[index]=':';
+      TasmotaGlobal.log_data[index]=':';
       index++;
-      log_data[index]=' ';
+      TasmotaGlobal.log_data[index]=' ';
       index++;
       d_lastms=millis();
       while ((millis()-d_lastms)<40) {
@@ -889,7 +901,7 @@ uint8_t dchars[16];
           if (meter_desc_p[(dump2log&7)-1].type=='e') {
             // ebus
             c=SML_SREAD;
-            sprintf(&log_data[index],"%02x ",c);
+            sprintf(&TasmotaGlobal.log_data[index],"%02x ",c);
             index+=3;
             if (c==EBUS_SYNC) break;
           } else {
@@ -904,13 +916,13 @@ uint8_t dchars[16];
               }
             }
             c=SML_SREAD;
-            sprintf(&log_data[index],"%02x ",c);
+            sprintf(&TasmotaGlobal.log_data[index],"%02x ",c);
             index+=3;
           }
         }
       }
       if (index>2) {
-        log_data[index]=0;
+        TasmotaGlobal.log_data[index]=0;
         AddLog(LOG_LEVEL_INFO);
       }
     }
@@ -1571,7 +1583,7 @@ void SML_Decode(uint8_t index) {
               if (lowByte(crc)!=smltbuf[mindex][pos]) goto nextsect;
               if (highByte(crc)!=smltbuf[mindex][pos+1]) goto nextsect;
               dval=mbus_dval;
-              //AddLog_P2(LOG_LEVEL_INFO, PSTR(">> %s"),mp);
+              //AddLog_P(LOG_LEVEL_INFO, PSTR(">> %s"),mp);
               mp++;
             } else {
               if (meter_desc_p[mindex].type=='p') {
@@ -1593,7 +1605,7 @@ void SML_Decode(uint8_t index) {
 #else
           meter_vars[vindex]=dval;
 #endif
-//AddLog_P2(LOG_LEVEL_INFO, PSTR(">> %s"),mp);
+//AddLog_P(LOG_LEVEL_INFO, PSTR(">> %s"),mp);
           // get scaling factor
           double fac=CharToDouble((char*)mp);
           meter_vars[vindex]/=fac;
@@ -1662,6 +1674,7 @@ void SML_Show(boolean json) {
   //char b_mqtt_data[MESSZ];
   //b_mqtt_data[0]=0;
 
+    if (!meters_used) return;
 
     int8_t lastmind=((*mp)&7)-1;
     if (lastmind<0 || lastmind>=meters_used) lastmind=0;
@@ -1794,9 +1807,9 @@ void SML_Show(boolean json) {
    }
 
 
-/*
+
 #ifdef USE_DOMOTICZ
-  if (json && !tele_period) {
+  if (json && !TasmotaGlobal.tele_period) {
     char str[16];
     dtostrfd(meter_vars[0], 1, str);
     DomoticzSensorPowerEnergy(meter_vars[1], str);  // PowerUsage, EnergyToday
@@ -1806,7 +1819,7 @@ void SML_Show(boolean json) {
     DomoticzSensor(DZ_CURRENT, str);  // Current
   }
 #endif  // USE_DOMOTICZ
-*/
+
 }
 
 struct SML_COUNTER {
@@ -1826,39 +1839,32 @@ struct SML_COUNTER {
 #endif
 } sml_counters[MAX_COUNTERS];
 
-void ICACHE_RAM_ATTR SML_CounterUpd(uint8_t index) {
+uint8_t sml_counter_pinstate;
 
-  uint8_t level=digitalRead(meter_desc_p[sml_counters[index].sml_cnt_old_state].srcpin);
-  if (!level) {
-    // falling edge
-    uint32_t ltime=millis()-sml_counters[index].sml_counter_ltime;
-    sml_counters[index].sml_counter_ltime=millis();
-    if (ltime>sml_counters[index].sml_debounce) {
-      RtcSettings.pulse_counter[index]++;
-      sml_counters[index].sml_cnt_updated=1;
-      //InjektCounterValue(sml_counters[index].sml_cnt_old_state,RtcSettings.pulse_counter[index]);
-    }
-  } else {
-    // rising edge
-    sml_counters[index].sml_counter_ltime=millis();
+uint8_t sml_cnt_index[MAX_COUNTERS] =  { 0, 1, 2, 3 };
+void ICACHE_RAM_ATTR SML_CounterIsr(void *arg) {
+uint32_t index = *static_cast<uint8_t*>(arg);
+
+uint32_t time = micros();
+uint32_t debounce_time;
+
+  if (digitalRead(meter_desc_p[sml_counters[index].sml_cnt_old_state].srcpin) == bitRead(sml_counter_pinstate, index)) {
+    return;
   }
+
+  debounce_time = time - sml_counters[index].sml_counter_ltime;
+
+  if (debounce_time <= sml_counters[index].sml_debounce * 1000) return;
+
+  if bitRead(sml_counter_pinstate, index) {
+    // falling edge
+    RtcSettings.pulse_counter[index]++;
+    sml_counters[index].sml_cnt_updated=1;
+  }
+  sml_counters[index].sml_counter_ltime = time;
+  sml_counter_pinstate ^= (1<<index);
 }
 
-void ICACHE_RAM_ATTR SML_CounterUpd1(void) {
-  SML_CounterUpd(0);
-}
-
-void ICACHE_RAM_ATTR SML_CounterUpd2(void) {
-  SML_CounterUpd(1);
-}
-
-void ICACHE_RAM_ATTR SML_CounterUpd3(void) {
-  SML_CounterUpd(2);
-}
-
-void ICACHE_RAM_ATTR SML_CounterUpd4(void) {
-  SML_CounterUpd(3);
-}
 
 #ifdef USE_SCRIPT
 struct METER_DESC  script_meter_desc[MAX_METERS];
@@ -1892,13 +1898,13 @@ char dstbuf[SML_SRCBSIZE*2];
     Replace_Cmd_Vars(lp,1,dstbuf,sizeof(dstbuf));
     lp+=SML_getlinelen(lp)+1;
     uint32_t slen=strlen(dstbuf);
-    //AddLog_P2(LOG_LEVEL_INFO, PSTR("%d - %s"),slen,dstbuf);
+    //AddLog_P(LOG_LEVEL_INFO, PSTR("%d - %s"),slen,dstbuf);
     mlen+=slen+1;
     if (*lp=='#') break;
     if (*lp=='>') break;
     if (*lp==0) break;
   }
-  //AddLog_P2(LOG_LEVEL_INFO, PSTR("len=%d"),mlen);
+  //AddLog_P(LOG_LEVEL_INFO, PSTR("len=%d"),mlen);
   return mlen+32;
 }
 #else
@@ -1910,21 +1916,13 @@ uint32_t SML_getscriptsize(char *lp) {
       break;
     }
   }
-  //AddLog_P2(LOG_LEVEL_INFO, PSTR("len=%d"),mlen);
+  //AddLog_P(LOG_LEVEL_INFO, PSTR("len=%d"),mlen);
   return mlen;
 }
 #endif
 
 bool Gpio_used(uint8_t gpiopin) {
-/*
-  for (uint16_t i=0;i<GPIO_SENSOR_END;i++) {
-//    if (pin_gpio[i]==gpiopin) {
-    if (Pin(i)==gpiopin) {
-      return true;
-    }
-  }
-*/
-  if ((gpiopin < ARRAY_SIZE(gpio_pin)) && (gpio_pin[gpiopin] > 0)) {
+  if ((gpiopin < ARRAY_SIZE(TasmotaGlobal.gpio_pin)) && (TasmotaGlobal.gpio_pin[gpiopin] > 0)) {
     return true;
   }
   return false;
@@ -2016,7 +2014,14 @@ dddef_exit:
           if (*lp!=',') goto next_line;
           lp++;
           script_meter_desc[index].type=*lp;
-          lp+=2;
+          lp++;
+          if (*lp!=',') {
+            script_meter_desc[index].sopt=*lp&7;
+            lp++;
+          } else {
+            script_meter_desc[index].sopt=0;
+          }
+          lp++;
           script_meter_desc[index].flag=strtol(lp,&lp,10);
           if (*lp!=',') goto next_line;
           lp++;
@@ -2073,7 +2078,7 @@ dddef_exit:
         char dstbuf[SML_SRCBSIZE*2];
         Replace_Cmd_Vars(lp,1,dstbuf,sizeof(dstbuf));
         lp+=SML_getlinelen(lp);
-        //AddLog_P2(LOG_LEVEL_INFO, PSTR("%s"),dstbuf);
+        //AddLog_P(LOG_LEVEL_INFO, PSTR("%s"),dstbuf);
         char *lp1=dstbuf;
         if (*lp1=='-' || isdigit(*lp1)) {
           //toLogEOL(">>",lp);
@@ -2131,7 +2136,6 @@ next_line:
 
 init10:
   typedef void (*function)();
-  function counter_callbacks[] = {SML_CounterUpd1,SML_CounterUpd2,SML_CounterUpd3,SML_CounterUpd4};
   uint8_t cindex=0;
   // preloud counters
   for (byte i = 0; i < MAX_COUNTERS; i++) {
@@ -2158,7 +2162,7 @@ init10:
           // check for irq mode
           if (meter_desc_p[meters].params<=0) {
             // init irq mode
-            attachInterrupt(meter_desc_p[meters].srcpin, counter_callbacks[cindex], CHANGE);
+            attachInterruptArg(meter_desc_p[meters].srcpin, SML_CounterIsr,&sml_cnt_index[cindex], CHANGE);
             sml_counters[cindex].sml_cnt_old_state=meters;
             sml_counters[cindex].sml_debounce=-meter_desc_p[meters].params;
           }
@@ -2174,35 +2178,41 @@ init10:
           meter_ss[meters] = new TasmotaSerial(meter_desc_p[meters].srcpin,meter_desc_p[meters].trxpin,1,1,TMSBSIZ);
         }
 #else
+#ifdef ESP8266
+        meter_ss[meters] = new TasmotaSerial(meter_desc_p[meters].srcpin,meter_desc_p[meters].trxpin,1,0,TMSBSIZ);
+#endif  // ESP8266
 #ifdef ESP32
         meter_ss[meters] = new HardwareSerial(uart_index);
         if (uart_index==0) { ClaimSerial(); }
         uart_index--;
         if (uart_index<0) uart_index=0;
         meter_ss[meters]->setRxBufferSize(TMSBSIZ);
-#else
-        meter_ss[meters] = new TasmotaSerial(meter_desc_p[meters].srcpin,meter_desc_p[meters].trxpin,1,0,TMSBSIZ);
-#endif
+#endif  // ESP32
 #endif
 
-#ifdef ESP32
-        if (meter_desc_p[meters].type=='M') {
-          meter_ss[meters]->begin(meter_desc_p[meters].params, SERIAL_8E1,meter_desc_p[meters].srcpin,meter_desc_p[meters].trxpin);
-        } else {
-          meter_ss[meters]->begin(meter_desc_p[meters].params,SERIAL_8N1,meter_desc_p[meters].srcpin,meter_desc_p[meters].trxpin);
+        SerialConfig smode = SERIAL_8N1;
+        if (meter_desc_p[meters].sopt == 2) {
+          smode = SERIAL_8N2;
         }
-#else
+        if (meter_desc_p[meters].type=='M') {
+          smode = SERIAL_8E1;
+          if (meter_desc_p[meters].sopt == 2) {
+            smode = SERIAL_8E2;
+          }
+        }
+#ifdef ESP8266
         if (meter_ss[meters]->begin(meter_desc_p[meters].params)) {
           meter_ss[meters]->flush();
         }
         if (meter_ss[meters]->hardwareSerial()) {
-          if (meter_desc_p[meters].type=='M') {
-            Serial.begin(meter_desc_p[meters].params, SERIAL_8E1);
-          }
+          Serial.begin(meter_desc_p[meters].params, smode);
           ClaimSerial();
           //Serial.setRxBufferSize(512);
         }
-#endif
+#endif  // ESP8266
+#ifdef ESP32
+        meter_ss[meters]->begin(meter_desc_p[meters].params, smode, meter_desc_p[meters].srcpin, meter_desc_p[meters].trxpin);
+#endif  // ESP32
     }
   }
 
@@ -2214,7 +2224,16 @@ uint32_t SML_SetBaud(uint32_t meter, uint32_t br) {
   if (meter<1 || meter>meters_used) return 0;
   meter--;
   if (!meter_ss[meter]) return 0;
-
+#ifdef ESP8266
+  if (meter_ss[meter]->begin(br)) {
+    meter_ss[meter]->flush();
+  }
+  if (meter_ss[meter]->hardwareSerial()) {
+    if (meter_desc_p[meter].type=='M') {
+      Serial.begin(br, SERIAL_8E1);
+    }
+  }
+#endif  // ESP8266
 #ifdef ESP32
   meter_ss[meter]->flush();
   meter_ss[meter]->updateBaudRate(br);
@@ -2224,16 +2243,7 @@ uint32_t SML_SetBaud(uint32_t meter, uint32_t br) {
   } else {
     meter_ss[meter]->begin(br,SERIAL_8N1,meter_desc_p[meter].srcpin,meter_desc_p[meter].trxpin);
   }*/
-#else
-  if (meter_ss[meter]->begin(br)) {
-    meter_ss[meter]->flush();
-  }
-  if (meter_ss[meter]->hardwareSerial()) {
-    if (meter_desc_p[meter].type=='M') {
-      Serial.begin(br, SERIAL_8E1);
-    }
-  }
-#endif
+#endif  // ESP32
   return 1;
 }
 
@@ -2401,10 +2411,10 @@ void SML_Check_Send(void) {
   char *cp;
   for (uint32_t cnt=sml_desc_cnt; cnt<meters_used; cnt++) {
     if (script_meter_desc[cnt].trxpin>=0 && script_meter_desc[cnt].txmem) {
-      //AddLog_P2(LOG_LEVEL_INFO, PSTR("100 ms>> %d - %s - %d"),sml_desc_cnt,script_meter_desc[cnt].txmem,script_meter_desc[cnt].tsecs);
+      //AddLog_P(LOG_LEVEL_INFO, PSTR("100 ms>> %d - %s - %d"),sml_desc_cnt,script_meter_desc[cnt].txmem,script_meter_desc[cnt].tsecs);
       if ((sml_100ms_cnt>=script_meter_desc[cnt].tsecs)) {
         sml_100ms_cnt=0;
-        //AddLog_P2(LOG_LEVEL_INFO, PSTR("100 ms>> 2"),cp);
+        //AddLog_P(LOG_LEVEL_INFO, PSTR("100 ms>> 2"),cp);
         if (script_meter_desc[cnt].max_index>1) {
           script_meter_desc[cnt].index++;
           if (script_meter_desc[cnt].index>=script_meter_desc[cnt].max_index) {
@@ -2418,7 +2428,7 @@ void SML_Check_Send(void) {
           //SML_Send_Seq(cnt,cp);
           sml_desc_cnt++;
         }
-        //AddLog_P2(LOG_LEVEL_INFO, PSTR(">> %s"),cp);
+        //AddLog_P(LOG_LEVEL_INFO, PSTR(">> %s"),cp);
         SML_Send_Seq(cnt,cp);
         if (sml_desc_cnt>=meters_used) {
           sml_desc_cnt=0;

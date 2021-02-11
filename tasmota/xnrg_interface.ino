@@ -145,7 +145,7 @@ bool (* const xnrg_func_ptr[])(uint8_t) = {   // Energy driver Function Pointers
   &Xnrg30,
 #endif
 
-#ifdef XNRG_31
+#ifdef XNRG_31  // Reserved for use by xdrv_45_shelly_dimmer.ino
   &Xnrg31,
 #endif
 
@@ -165,13 +165,13 @@ bool XnrgCall(uint8_t function)
   if (FUNC_PRE_INIT == function) {
     for (uint32_t x = 0; x < xnrg_present; x++) {
       xnrg_func_ptr[x](function);
-      if (energy_flg) {
+      if (TasmotaGlobal.energy_driver) {
         xnrg_active = x;
         return true;  // Stop further driver investigation
       }
     }
   }
-  else if (energy_flg) {
+  else if (TasmotaGlobal.energy_driver) {
     return xnrg_func_ptr[xnrg_active](function);
   }
   return false;

@@ -33,10 +33,10 @@ extern "C" {
 }
 #endif
 
-//#ifdef USE_KNX  // Enabling this will fail compilation. It has no impact if not used. (20180417)
-#include <esp-knx-ip.h>
+#include <esp-knx-ip.h> // KNX Header files have to be global else compile fails -> lib/headers
+#ifdef USE_KNX
 void KNX_CB_Action(message_t const &msg, void *arg);
-//#endif  // USE_KNX
+#endif  // USE_KNX
 
 void DomoticzTempHumPressureSensor(float temp, float hum, float baro = -1);
 char* ToHex_P(const unsigned char * in, size_t insz, char * out, size_t outsz, char inbetween = '\0');
@@ -60,6 +60,82 @@ String EthernetMacAddress(void);
 \*********************************************************************************************/
 
 #include "tasmota_configurations.h"            // Preconfigured configurations
+
+/*********************************************************************************************\
+ * ESP8266 specific parameters
+\*********************************************************************************************/
+
+#ifdef ESP8266
+
+#ifndef MODULE
+#define MODULE                      SONOFF_BASIC   // [Module] Select default model
+#endif
+#ifndef FALLBACK_MODULE
+#define FALLBACK_MODULE             SONOFF_BASIC   // [Module2] Select default module on fast reboot where USER_MODULE is user template
+#endif
+
+#ifndef ARDUINO_ESP8266_RELEASE
+#define ARDUINO_CORE_RELEASE        "STAGE"
+#else
+#define ARDUINO_CORE_RELEASE        ARDUINO_ESP8266_RELEASE
+#endif  // ARDUINO_ESP8266_RELEASE
+
+#ifndef USE_ADC_VCC
+#define USE_ADC
+#else
+#undef USE_ADC
+#endif
+
+#endif  // ESP8266
+
+/*********************************************************************************************\
+ * ESP32 specific parameters
+\*********************************************************************************************/
+
+#ifdef ESP32
+
+#ifndef MODULE
+#define MODULE                      WEMOS          // [Module] Select default model
+#endif
+#ifndef FALLBACK_MODULE
+#define FALLBACK_MODULE             WEMOS          // [Module2] Select default module on fast reboot where USER_MODULE is user template
+#endif
+
+#ifndef ARDUINO_ESP32_RELEASE
+#define ARDUINO_CORE_RELEASE        "STAGE"
+#else
+#define ARDUINO_CORE_RELEASE        ARDUINO_ESP32_RELEASE
+#endif  // ARDUINO_ESP32_RELEASE
+
+#define USE_TFS
+
+#ifdef USE_SCRIPT
+#undef USE_TFS
+#endif  // USE_SCRIPT
+
+// Hardware has no ESP32
+#undef USE_TUYA_DIMMER
+#undef USE_PWM_DIMMER
+#undef USE_EXS_DIMMER
+#undef USE_ARMTRONIX_DIMMERS
+#undef USE_SONOFF_RF
+#undef USE_SONOFF_SC
+#undef USE_SONOFF_IFAN
+#undef USE_SONOFF_L1
+#undef USE_SONOFF_D1
+#undef USE_SHELLY_DIMMER
+#undef USE_RF_FLASH
+
+// Not ported (yet)
+#undef USE_DISCOVERY
+#undef USE_MY92X1
+#undef USE_TUYA_MCU
+#undef USE_PS_16_DZ
+
+#undef USE_HM10                     // Disable support for HM-10 as a BLE-bridge as an alternative is using the internal ESP32 BLE
+#undef USE_KEELOQ                   // Disable support for Jarolift rollers by Keeloq algorithm as it's library cc1101 is not compatible with ESP32
+
+#endif  // ESP32
 
 /*********************************************************************************************\
  * Mandatory defines satisfying disabled defines
@@ -90,6 +166,17 @@ String EthernetMacAddress(void);
 #undef USE_RF_FLASH                            // Disable RF firmware flash when Sonoff Rf is disabled
 #endif
 
+#ifndef USE_ZIGBEE
+#undef USE_ZIGBEE_EZSP                         // Disable Zigbee EZSP firmware flash
+#endif
+
+#ifndef USE_LIGHT
+#undef SHELLY_FW_UPGRADE                       // Disable Shelly Dimmer firmware flash when lights are disabled
+#endif
+#ifndef USE_SHELLY_DIMMER
+#undef SHELLY_FW_UPGRADE                       // Disable Shelly Dimmer firmware flash when Shelly Dimmer is disabled
+#endif
+
 #ifndef APP_INTERLOCK_MODE
 #define APP_INTERLOCK_MODE     false           // [Interlock] Relay interlock mode
 #endif
@@ -112,10 +199,10 @@ String EthernetMacAddress(void);
 
 #ifndef MQTT_FINGERPRINT1
 // Set an all-zeros default fingerprint to activate auto-learning on first connection (AWS IoT)
-#define MQTT_FINGERPRINT1           "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
+#define MQTT_FINGERPRINT1      0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00  // [MqttFingerprint1] (auto-learn)
 #endif
 #ifndef MQTT_FINGERPRINT2           // SHA1('')
-#define MQTT_FINGERPRINT2           "DA 39 A3 EE 5E 6B 4B 0D 32 55 BF EF 95 60 18 90 AF D8 07 09"
+#define MQTT_FINGERPRINT2      0xDA,0x39,0xA3,0xEE,0x5E,0x6B,0x4B,0x0D,0x32,0x55,0xBF,0xEF,0x95,0x60,0x18,0x90,0xAF,0xD8,0x07,0x09  // [MqttFingerprint2] (invalid)
 #endif
 
 #ifndef WS2812_LEDS
@@ -219,6 +306,9 @@ String EthernetMacAddress(void);
 #ifndef DEFAULT_DIMMER_MIN
 #define DEFAULT_DIMMER_MIN          0
 #endif
+#ifndef DEFAULT_DIMMER_STEP
+#define DEFAULT_DIMMER_STEP         10
+#endif
 #ifndef DEFAULT_LIGHT_DIMMER
 #define DEFAULT_LIGHT_DIMMER        10
 #endif
@@ -315,49 +405,6 @@ const char kWebColors[] PROGMEM =
   COLOR_TIMER_TAB_TEXT "|" COLOR_TIMER_TAB_BACKGROUND "|" COLOR_TITLE_TEXT;
 
 /*********************************************************************************************\
- * ESP8266 vs ESP32 related parameters
-\*********************************************************************************************/
-
-#ifdef ESP8266
-
-#ifndef MODULE
-#define MODULE                      SONOFF_BASIC   // [Module] Select default model
-#endif
-#ifndef FALLBACK_MODULE
-#define FALLBACK_MODULE             SONOFF_BASIC   // [Module2] Select default module on fast reboot where USER_MODULE is user template
-#endif
-
-#ifndef ARDUINO_ESP8266_RELEASE
-#define ARDUINO_CORE_RELEASE        "STAGE"
-#else
-#define ARDUINO_CORE_RELEASE        ARDUINO_ESP8266_RELEASE
-#endif  // ARDUINO_ESP8266_RELEASE
-
-#endif  // ESP8266
-
-#ifdef ESP32
-
-#ifndef MODULE
-#define MODULE                      WEMOS          // [Module] Select default model
-#endif
-#ifndef FALLBACK_MODULE
-#define FALLBACK_MODULE             WEMOS          // [Module2] Select default module on fast reboot where USER_MODULE is user template
-#endif
-
-#ifndef ARDUINO_ESP32_RELEASE
-#define ARDUINO_CORE_RELEASE        "STAGE"
-#else
-#define ARDUINO_CORE_RELEASE        ARDUINO_ESP32_RELEASE
-#endif  // ARDUINO_ESP32_RELEASE
-
-#undef USE_HM10                     // Disable support for HM-10 as a BLE-bridge as an alternative is using the internal ESP32 BLE
-#undef USE_KEELOQ                   // Disable support for Jarolift rollers by Keeloq algorithm as it's library cc1101 is not compatible with ESP32
-//#undef USE_DISPLAY_ILI9488          // Disable as it's library JaretBurkett_ILI9488-gemu-1.0 is not compatible with ESP32
-//#undef USE_DISPLAY_SSD1351          // Disable as it's library Adafruit_SSD1351_gemu-1.0 is not compatible with ESP32
-
-#endif  // ESP32
-
-/*********************************************************************************************\
  * Macros
 \*********************************************************************************************/
 
@@ -378,18 +425,14 @@ const char kWebColors[] PROGMEM =
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 #endif
 
-#ifdef ESP8266
-#define AGPIO(x) (x)
-#define BGPIO(x) (x)
-#else  // ESP32
-#define AGPIO(x) (x<<5)
-#define BGPIO(x) (x>>5)
-#endif  // ESP8266 - ESP32
+#define AGPIO(x) ((x)<<5)
+#define BGPIO(x) ((x)>>5)
 
 #ifdef USE_DEVICE_GROUPS
 #define SendDeviceGroupMessage(DEVICE_INDEX, REQUEST_TYPE, ...) _SendDeviceGroupMessage(DEVICE_INDEX, REQUEST_TYPE, __VA_ARGS__, 0)
 #define SendLocalDeviceGroupMessage(REQUEST_TYPE, ...) _SendDeviceGroupMessage(0, REQUEST_TYPE, __VA_ARGS__, 0)
 uint8_t device_group_count = 0;
+bool first_device_group_is_local = true;
 #endif  // USE_DEVICE_GROUPS
 
 #ifdef DEBUG_TASMOTA_CORE

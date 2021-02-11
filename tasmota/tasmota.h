@@ -82,7 +82,12 @@ const uint8_t MAX_FRIENDLYNAMES = 8;        // Max number of Friendly names
 const uint8_t MAX_BUTTON_TEXT = 16;         // Max number of GUI button labels
 const uint8_t MAX_GROUP_TOPICS = 4;         // Max number of Group Topics
 const uint8_t MAX_DEV_GROUP_NAMES = 4;      // Max number of Device Group names
+#ifdef ESP8266
+const uint8_t MAX_ADCS = 1;                 // Max number of ESP8266 ADC pins
+#endif  // ESP8266
+#ifdef ESP32
 const uint8_t MAX_ADCS = 8;                 // Max number of ESP32 ADC pins (ADC2 pins are unusable with Wifi enabled)
+#endif  // ESP32
 
 const uint8_t MAX_HUE_DEVICES = 15;         // Max number of Philips Hue device per emulation
 const uint8_t MAX_ROTARIES = 2;             // Max number of Rotary Encoders
@@ -95,8 +100,8 @@ const uint8_t CONFIG_FILE_SIGN = 0xA5;      // Configuration file signature
 const uint8_t CONFIG_FILE_XOR = 0x5A;       // Configuration file xor (0 = No Xor)
 
 const uint32_t HLW_PREF_PULSE = 12530;      // was 4975us = 201Hz = 1000W
-const uint32_t HLW_UREF_PULSE = 1592;       // 120V US 60HZ - Calibrated with Kill-A-Watt
-const uint32_t HLW_IREF_PULSE = 3700;       // 120V US 65W Load - Calibrated with Kill-A-Watt
+const uint32_t HLW_UREF_PULSE = 1950;       // was 1666us = 600Hz = 220V
+const uint32_t HLW_IREF_PULSE = 3500;       // was 1666us = 600Hz = 4.545A
 
 const uint8_t MQTT_RETRY_SECS = 10;         // Minimum seconds to retry MQTT connection
 const uint32_t GLOBAL_VALUES_VALID = 300;   // Max number of seconds to keep last received values
@@ -224,7 +229,7 @@ enum LoggingLevels {LOG_LEVEL_NONE, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_D
 enum WifiConfigOptions {WIFI_RESTART, EX_WIFI_SMARTCONFIG, WIFI_MANAGER, EX_WIFI_WPSCONFIG, WIFI_RETRY, WIFI_WAIT, WIFI_SERIAL, WIFI_MANAGER_RESET_ONLY, MAX_WIFI_OPTION};
 
 enum SwitchModeOptions {TOGGLE, FOLLOW, FOLLOW_INV, PUSHBUTTON, PUSHBUTTON_INV, PUSHBUTTONHOLD, PUSHBUTTONHOLD_INV, PUSHBUTTON_TOGGLE, TOGGLEMULTI,
-                        FOLLOWMULTI, FOLLOWMULTI_INV, PUSHHOLDMULTI, PUSHHOLDMULTI_INV, PUSHON, PUSHON_INV, MAX_SWITCH_OPTION};
+                        FOLLOWMULTI, FOLLOWMULTI_INV, PUSHHOLDMULTI, PUSHHOLDMULTI_INV, PUSHON, PUSHON_INV, PUSH_IGNORE, MAX_SWITCH_OPTION};
 
 enum LedStateOptions {LED_OFF, LED_POWER, LED_MQTTSUB, LED_POWER_MQTTSUB, LED_MQTTPUB, LED_POWER_MQTTPUB, LED_MQTT, LED_POWER_MQTT, MAX_LED_OPTION};
 
@@ -297,14 +302,19 @@ enum SettingsTextIndex { SET_OTAURL,
                          SET_DEV_GROUP_NAME1, SET_DEV_GROUP_NAME2, SET_DEV_GROUP_NAME3, SET_DEV_GROUP_NAME4,  // MAX_DEV_GROUP_NAMES
                          SET_DEVICENAME,
                          SET_TELEGRAM_TOKEN, SET_TELEGRAM_CHATID,
+#ifdef ESP8266
+                         SET_ADC_PARAM1,
+#endif  // ESP8266
 #ifdef ESP32
                          SET_ADC_PARAM1, SET_ADC_PARAM2, SET_ADC_PARAM3, SET_ADC_PARAM4, SET_ADC_PARAM5, SET_ADC_PARAM6, SET_ADC_PARAM7, SET_ADC_PARAM8,  // MAX_ADCS
-#endif
+#endif  // ESP32
+                         SET_SWITCH_TXT1, SET_SWITCH_TXT2, SET_SWITCH_TXT3, SET_SWITCH_TXT4, SET_SWITCH_TXT5, SET_SWITCH_TXT6, SET_SWITCH_TXT7, SET_SWITCH_TXT8,  // MAX_SWITCHES
+                         SET_SHD_PARAM,
                          SET_MAX };
 
-enum DevGroupMessageType { DGR_MSGTYP_FULL_STATUS, DGR_MSGTYP_PARTIAL_UPDATE, DGR_MSGTYP_UPDATE, DGR_MSGTYP_UPDATE_MORE_TO_COME, DGR_MSGTYP_UPDATE_DIRECT, DGR_MSGTYPE_UPDATE_COMMAND };
+enum DevGroupMessageType { DGR_MSGTYP_FULL_STATUS, DGR_MSGTYP_PARTIAL_UPDATE, DGR_MSGTYP_UPDATE, DGR_MSGTYP_UPDATE_MORE_TO_COME, DGR_MSGTYP_UPDATE_DIRECT, DGR_MSGTYPE_UPDATE_COMMAND, DGR_MSGTYPFLAG_WITH_LOCAL = 128 };
 
-enum DevGroupMessageFlag { DGR_FLAG_RESET = 1, DGR_FLAG_STATUS_REQUEST = 2, DGR_FLAG_FULL_STATUS = 4, DGR_FLAG_ACK = 8, DGR_FLAG_MORE_TO_COME = 16, DGR_FLAG_DIRECT = 32, DGR_FLAG_ANNOUNCEMENT = 64 };
+enum DevGroupMessageFlag { DGR_FLAG_RESET = 1, DGR_FLAG_STATUS_REQUEST = 2, DGR_FLAG_FULL_STATUS = 4, DGR_FLAG_ACK = 8, DGR_FLAG_MORE_TO_COME = 16, DGR_FLAG_DIRECT = 32, DGR_FLAG_ANNOUNCEMENT = 64, DGR_FLAG_LOCAL = 128 };
 
 enum DevGroupItem { DGR_ITEM_EOL, DGR_ITEM_STATUS, DGR_ITEM_FLAGS,
                     DGR_ITEM_LIGHT_FADE, DGR_ITEM_LIGHT_SPEED, DGR_ITEM_LIGHT_BRI, DGR_ITEM_LIGHT_SCHEME, DGR_ITEM_LIGHT_FIXED_COLOR,
@@ -327,10 +337,10 @@ enum DevGroupShareItem { DGR_SHARE_POWER = 1, DGR_SHARE_LIGHT_BRI = 2, DGR_SHARE
 
 enum CommandSource { SRC_IGNORE, SRC_MQTT, SRC_RESTART, SRC_BUTTON, SRC_SWITCH, SRC_BACKLOG, SRC_SERIAL, SRC_WEBGUI, SRC_WEBCOMMAND, SRC_WEBCONSOLE, SRC_PULSETIMER,
                      SRC_TIMER, SRC_RULE, SRC_MAXPOWER, SRC_MAXENERGY, SRC_OVERTEMP, SRC_LIGHT, SRC_KNX, SRC_DISPLAY, SRC_WEMO, SRC_HUE, SRC_RETRY, SRC_REMOTE, SRC_SHUTTER,
-                     SRC_THERMOSTAT, SRC_CHAT, SRC_MAX };
+                     SRC_THERMOSTAT, SRC_CHAT, SRC_TCL, SRC_MAX };
 const char kCommandSource[] PROGMEM = "I|MQTT|Restart|Button|Switch|Backlog|Serial|WebGui|WebCommand|WebConsole|PulseTimer|"
                                       "Timer|Rule|MaxPower|MaxEnergy|Overtemp|Light|Knx|Display|Wemo|Hue|Retry|Remote|Shutter|"
-                                      "Thermostat|Chat";
+                                      "Thermostat|Chat|TCL";
 
 const uint8_t kDefaultRfCode[9] PROGMEM = { 0x21, 0x16, 0x01, 0x0E, 0x03, 0x48, 0x2E, 0x1A, 0x00 };
 
@@ -342,6 +352,7 @@ enum TasmotaSerialConfig {
   TS_SERIAL_5O1, TS_SERIAL_6O1, TS_SERIAL_7O1, TS_SERIAL_8O1,
   TS_SERIAL_5O2, TS_SERIAL_6O2, TS_SERIAL_7O2, TS_SERIAL_8O2 };
 
+#ifdef ESP8266
 const SerConfu8 kTasmotaSerialConfig[] PROGMEM = {
   SERIAL_5N1, SERIAL_6N1, SERIAL_7N1, SERIAL_8N1,
   SERIAL_5N2, SERIAL_6N2, SERIAL_7N2, SERIAL_8N2,
@@ -350,16 +361,37 @@ const SerConfu8 kTasmotaSerialConfig[] PROGMEM = {
   SERIAL_5O1, SERIAL_6O1, SERIAL_7O1, SERIAL_8O1,
   SERIAL_5O2, SERIAL_6O2, SERIAL_7O2, SERIAL_8O2
 };
+#endif  // ESP8266
+#ifdef ESP32
+const uint32_t kTasmotaSerialConfig[] PROGMEM = {
+  SERIAL_5N1, SERIAL_6N1, SERIAL_7N1, SERIAL_8N1,
+  SERIAL_5N2, SERIAL_6N2, SERIAL_7N2, SERIAL_8N2,
+  SERIAL_5E1, SERIAL_6E1, SERIAL_7E1, SERIAL_8E1,
+  SERIAL_5E2, SERIAL_6E2, SERIAL_7E2, SERIAL_8E2,
+  SERIAL_5O1, SERIAL_6O1, SERIAL_7O1, SERIAL_8O1,
+  SERIAL_5O2, SERIAL_6O2, SERIAL_7O2, SERIAL_8O2
+};
+#endif  // ESP32
 
-enum TuyaSupportedFunctions { TUYA_MCU_FUNC_NONE, TUYA_MCU_FUNC_SWT1 = 1, TUYA_MCU_FUNC_SWT2, TUYA_MCU_FUNC_SWT3, TUYA_MCU_FUNC_SWT4,
+enum TuyaSupportedFunctions { TUYA_MCU_FUNC_NONE,
+                              TUYA_MCU_FUNC_SWT1 = 1, TUYA_MCU_FUNC_SWT2, TUYA_MCU_FUNC_SWT3, TUYA_MCU_FUNC_SWT4,
                               TUYA_MCU_FUNC_REL1 = 11, TUYA_MCU_FUNC_REL2, TUYA_MCU_FUNC_REL3, TUYA_MCU_FUNC_REL4, TUYA_MCU_FUNC_REL5,
-                              TUYA_MCU_FUNC_REL6, TUYA_MCU_FUNC_REL7, TUYA_MCU_FUNC_REL8, TUYA_MCU_FUNC_DIMMER = 21, TUYA_MCU_FUNC_DIMMER2,
-                              TUYA_MCU_FUNC_CT, TUYA_MCU_FUNC_RGB, TUYA_MCU_FUNC_WHITE, TUYA_MCU_FUNC_MODESET, TUYA_MCU_FUNC_REPORT1, TUYA_MCU_FUNC_REPORT2,
+                                TUYA_MCU_FUNC_REL6, TUYA_MCU_FUNC_REL7, TUYA_MCU_FUNC_REL8,
+                              TUYA_MCU_FUNC_DIMMER = 21, TUYA_MCU_FUNC_DIMMER2, TUYA_MCU_FUNC_CT, TUYA_MCU_FUNC_RGB, TUYA_MCU_FUNC_WHITE,
+                                TUYA_MCU_FUNC_MODESET, TUYA_MCU_FUNC_REPORT1, TUYA_MCU_FUNC_REPORT2,
                               TUYA_MCU_FUNC_POWER = 31, TUYA_MCU_FUNC_CURRENT, TUYA_MCU_FUNC_VOLTAGE, TUYA_MCU_FUNC_BATTERY_STATE, TUYA_MCU_FUNC_BATTERY_PERCENTAGE,
                               TUYA_MCU_FUNC_REL1_INV = 41, TUYA_MCU_FUNC_REL2_INV, TUYA_MCU_FUNC_REL3_INV, TUYA_MCU_FUNC_REL4_INV, TUYA_MCU_FUNC_REL5_INV,
-                              TUYA_MCU_FUNC_REL6_INV, TUYA_MCU_FUNC_REL7_INV, TUYA_MCU_FUNC_REL8_INV, TUYA_MCU_FUNC_LOWPOWER_MODE = 51,
-                              TUYA_MCU_FUNC_FAN3 = 61, TUYA_MCU_FUNC_FAN4, TUYA_MCU_FUNC_FAN5, TUYA_MCU_FUNC_FAN6,
-                              TUYA_MCU_FUNC_MOTOR_DIR = 97, TUYA_MCU_FUNC_ERROR = 98 , TUYA_MCU_FUNC_DUMMY = 99, TUYA_MCU_FUNC_LAST = 255
+                                TUYA_MCU_FUNC_REL6_INV, TUYA_MCU_FUNC_REL7_INV, TUYA_MCU_FUNC_REL8_INV,
+                              TUYA_MCU_FUNC_LOWPOWER_MODE = 51,
+                              TUYA_MCU_FUNC_ENUM1 = 61, TUYA_MCU_FUNC_ENUM2, TUYA_MCU_FUNC_ENUM3, TUYA_MCU_FUNC_ENUM4,
+                              TUYA_MCU_FUNC_TEMP = 71, TUYA_MCU_FUNC_TEMPSET, TUYA_MCU_FUNC_HUM, TUYA_MCU_FUNC_HUMSET,
+                              TUYA_MCU_FUNC_LX = 75, TUYA_MCU_FUNC_TVOC, TUYA_MCU_FUNC_CO2, TUYA_MCU_FUNC_ECO2,
+                              TUYA_MCU_FUNC_TIMER1 = 81, TUYA_MCU_FUNC_TIMER2, TUYA_MCU_FUNC_TIMER3, TUYA_MCU_FUNC_TIMER4,
+                              TUYA_MCU_FUNC_MOTOR_DIR = 97,
+                              TUYA_MCU_FUNC_ERROR = 98,
+                              TUYA_MCU_FUNC_DUMMY = 99,
+                              TUYA_MCU_FUNC_LAST = 255
+                              // IDs from 230 to 234 are reserved for internal use
 };
 
 #endif  // _TASMOTA_H_
