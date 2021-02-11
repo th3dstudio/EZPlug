@@ -18,33 +18,7 @@
 
 ## Using the EZPlug with "Vanilla" Tasmota
 
-Our plug is compatible with regular Tasmota when setup with the correct template. The EZPlug+ will need to be [calibrated](https://tasmota.github.io/docs/Power-Monitoring-Calibration/) per the Tasmota guides. 
-
-You are welcome to use standard Tasmota with your EZPlug but this is not covered under technical support. Only when using the EZPlug with our firmware is support able to assist with using the plug. This is because we pre-setup and calibrate values for the plugs to make sure things work correctly out of the box. Converting to the standard Tasmota firmware is for advanced users.
-
-**Tasmota Templates:**
-
-Tasmota 9.1 and Later:
-
-- **EZPlug:** `{"NAME":"EZPlug V1","GPIO":[0,0,0,32,0,0,0,0,0,320,224,0,0,0],"FLAG":0,"BASE":1}`
-- **EZPlug+:** `{"NAME":"EZPlug+ V1","GPIO":[0,0,0,32,2720,2656,0,0,2624,320,224,0,0,0],"FLAG":0,"BASE":1}`
-
-Tasmota 9.0 and Older:
-
-- **EZPlug:** `{"NAME":"EZPlug V1","GPIO":[0,0,0,17,0,0,0,0,0,56,21,0,0],"FLAG":0,"BASE":1}`
-- **EZPlug+:** `{"NAME":"EZPlug+ V1","GPIO":[0,0,0,17,134,132,0,0,131,56,21,0,0],"FLAG":0,"BASE":1}`
-
-**Converting the EZPlug from our Firmware to Tasmota:**
-
-1. Download the latest tasmota-minimal.bin and flash it from the GUI
-2. Download the latest tasmota.bin and flash it from the GUI
-3. Reset the EZPlug configuration to clear out our config to prevent errors
-4. In Configuration > Configure Other input the template above for your plug and Tasmota version.
-5. Check the "Activate" Box and then click "Save"
-6. The plug will restart and apply the template
-7. Use it with standard Tasmota!
-
-**Power calibration on Standard Tasmota:** Our firmware contains pre-calibration for US voltage. If you use standard Tasmota you will want to calibrate the plug using the [Tasmota power calibration guide](https://tasmota.github.io/docs/Power-Monitoring-Calibration/).
+Templates and directions are located in our help center here: [https://support.th3dstudio.com/hc/product-information/ezplug/using-the-ezplug-with-vanilla-tasmota/](https://support.th3dstudio.com/hc/product-information/ezplug/using-the-ezplug-with-vanilla-tasmota/)
 
 ## Contribute to the Tasmota Project
 
