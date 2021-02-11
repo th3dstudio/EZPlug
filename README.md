@@ -18,7 +18,9 @@
 
 ## Using the EZPlug with "Vanilla" Tasmota
 
-Our plug is compatible with regular Tasmota when setup with the correct template. The EZPlug+ will need to be calibrated per the Tasmota guides. You are welcome to use standard Tasmota with your EZPlug but this is not covered under technical support. Only when using the EZPlug with our firmware is support able to assist. This is because we pre-setup and calibrate values for the plugs to make sure things work correctly out of the box. Converting to the standard Tasmota firmware is for advanced users.
+Our plug is compatible with regular Tasmota when setup with the correct template. The EZPlug+ will need to be [calibrated](https://tasmota.github.io/docs/Power-Monitoring-Calibration/) per the Tasmota guides. 
+
+You are welcome to use standard Tasmota with your EZPlug but this is not covered under technical support. Only when using the EZPlug with our firmware is support able to assist with using the plug. This is because we pre-setup and calibrate values for the plugs to make sure things work correctly out of the box. Converting to the standard Tasmota firmware is for advanced users.
 
 **Tasmota Templates:**
 
@@ -42,7 +44,7 @@ Tasmota 9.0 and Older:
 6. The plug will restart and apply the template
 7. Use it with standard Tasmota!
 
-**Power calibration on Standard Tasmota:** Our firmware contains pre-calibration for US voltage. If you use standard Tasmota you will want to calibrate the plug using the Tasmota power calibration guide.
+**Power calibration on Standard Tasmota:** Our firmware contains pre-calibration for US voltage. If you use standard Tasmota you will want to calibrate the plug using the [Tasmota power calibration guide](https://tasmota.github.io/docs/Power-Monitoring-Calibration/).
 
 ## Contribute to the Tasmota Project
 
